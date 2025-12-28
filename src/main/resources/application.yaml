@@ -1,3 +1,9 @@
 spring:
   application:
     name: tichu-sim
+  datasource:
+    url: jdbc:mysql://localhost:3306/tichu?createDatabaseIfNotExist=true
+    username: root
+    password: MyPassword!
+  jpa:
+    show-sql: true
