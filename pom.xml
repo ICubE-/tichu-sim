@@ -142,6 +142,12 @@
             <artifactId>mapstruct-processor</artifactId>
             <version>1.6.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>springboot4-dotenv</artifactId>
+            <version>5.0.1</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
