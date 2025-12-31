@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.users;
 
-import org.jspecify.annotations.NonNull;
+import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
