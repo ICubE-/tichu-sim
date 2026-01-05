@@ -3,13 +3,13 @@ package com.icube.sim.tichu.users;
 import com.icube.sim.tichu.ErrorDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.jspecify.annotations.NonNull;
+import lombok.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
 
