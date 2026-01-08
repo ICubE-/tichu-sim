@@ -29,11 +29,11 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private final TichuSimUserDetailsService tichuSimUserDetailsService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @Value("${spring.cors.allowed-origin}")
     private String corsAllowedOrigin;
+
+    private final TichuSimUserDetailsService tichuSimUserDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
