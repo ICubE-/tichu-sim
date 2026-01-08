@@ -2,7 +2,8 @@ package com.icube.sim.tichu.auth;
 
 import com.icube.sim.tichu.auth.jwt.JwtAuthenticationFilter;
 import com.icube.sim.tichu.users.TichuSimUserDetailsService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,16 +19,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-@AllArgsConstructor
+import java.util.List;
+
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final TichuSimUserDetailsService tichuSimUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${spring.cors.allowed-origin}")
+    private String corsAllowedOrigin;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -48,20 +54,24 @@ public class SecurityConfig {
                 .sessionManagement(c -> c
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .cors(c -> {
+                    var corsConfiguration = new CorsConfiguration();
+                    corsConfiguration.addAllowedOrigin(corsAllowedOrigin);
+                    corsConfiguration.setAllowedMethods(List.of("GET", "POST"));
+                    corsConfiguration.setAllowCredentials(true);
+                    var corsConfigurationSource = new UrlBasedCorsConfigurationSource();
+                    corsConfigurationSource.registerCorsConfiguration("/api/**", corsConfiguration);
+                    c.configurationSource(corsConfigurationSource);
+                })
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterAfter(jwtAuthenticationFilter, LogoutFilter.class)
                 .authorizeHttpRequests(c -> c
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/login", "/login.html").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(c -> c
-                        .defaultAuthenticationEntryPointFor(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                PathPatternRequestMatcher.pathPattern("/api/**")
-                        )
-                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         .accessDeniedHandler((request, response, accessDeniedException) ->
                                 response.setStatus(HttpStatus.FORBIDDEN.value())
                         )

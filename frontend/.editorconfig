@@ -1,2 +1,2 @@
-[*.{html,css,js}]
+[*.{html,css,js,jsx}]
 indent_size = 2
