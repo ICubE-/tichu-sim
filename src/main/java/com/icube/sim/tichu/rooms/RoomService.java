@@ -36,6 +36,7 @@ public class RoomService {
         } while (rooms.containsKey(id));
 
         var room = new Room(id, request.getName());
+        rooms.put(id, room);
         room.addMember(new Member(user.getId(), user.getName()));
         memberIds.add(user.getId());
     }
