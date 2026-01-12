@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 
@@ -21,8 +22,13 @@ public class RoomController {
     }
 
     @PostMapping
-    public void createRoom(@Valid @RequestBody CreateRoomRequest request) {
-        roomService.createRoom(request);
+    public ResponseEntity<@NonNull CreateRoomResponse> createRoom(
+            @Valid @RequestBody CreateRoomRequest request,
+            UriComponentsBuilder uriBuilder
+    ) {
+        var response = roomService.createRoom(request);
+        var uri = uriBuilder.path("/api/rooms/{id}").buildAndExpand(response.getId()).toUri();
+        return ResponseEntity.created(uri).body(response);
     }
 
     @PostMapping("/{id}")

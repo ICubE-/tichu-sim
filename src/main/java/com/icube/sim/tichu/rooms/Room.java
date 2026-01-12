@@ -18,10 +18,15 @@ public class Room {
     }
 
     public void addMember(Member member) {
+        assert members.stream().noneMatch(m -> m.id().equals(member.id()));
         members.add(member);
     }
 
     public void removeMember(Long memberId) {
         members.removeIf(m -> m.id().equals(memberId));
+    }
+
+    public boolean containsMember(Long memberId) {
+        return members.stream().anyMatch(m -> m.id().equals(memberId));
     }
 }

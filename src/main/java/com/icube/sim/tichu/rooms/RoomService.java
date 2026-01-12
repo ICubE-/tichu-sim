@@ -1,7 +1,6 @@
 package com.icube.sim.tichu.rooms;
 
 import com.icube.sim.tichu.auth.AuthService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,11 @@ public class RoomService {
         return rooms;
     }
 
-    public synchronized void createRoom(CreateRoomRequest request) {
+    public synchronized Optional<Room> getRoom(String id) {
+        return Optional.ofNullable(rooms.get(id));
+    }
+
+    public synchronized CreateRoomResponse createRoom(CreateRoomRequest request) {
         var user = authService.getCurrentUser();
         if (memberIds.contains(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
@@ -36,8 +39,11 @@ public class RoomService {
         } while (rooms.containsKey(id));
 
         var room = new Room(id, request.getName());
+        rooms.put(id, room);
         room.addMember(new Member(user.getId(), user.getName()));
         memberIds.add(user.getId());
+
+        return new CreateRoomResponse(id);
     }
 
     public synchronized void enterRoom(String id) {
