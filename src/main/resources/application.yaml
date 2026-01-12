@@ -13,3 +13,5 @@ spring:
     refreshTokenExpiration: 7200  # 2 hrs
   cors:
     allowed-origin: http://localhost:5173
+  rooms:
+    id-length: 5
