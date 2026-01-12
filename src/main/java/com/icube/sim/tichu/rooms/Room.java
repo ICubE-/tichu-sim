@@ -18,6 +18,7 @@ public class Room {
     }
 
     public void addMember(Member member) {
+        assert members.stream().noneMatch(m -> m.id().equals(member.id()));
         members.add(member);
     }
 
