@@ -24,6 +24,10 @@ public class RoomService {
         return rooms;
     }
 
+    public synchronized Optional<Room> getRoom(String id) {
+        return Optional.ofNullable(rooms.get(id));
+    }
+
     public synchronized CreateRoomResponse createRoom(CreateRoomRequest request) {
         var user = authService.getCurrentUser();
         if (memberIds.contains(user.getId())) {
