@@ -24,7 +24,7 @@ public class RoomService {
         return rooms;
     }
 
-    public synchronized void createRoom(CreateRoomRequest request) {
+    public synchronized CreateRoomResponse createRoom(CreateRoomRequest request) {
         var user = authService.getCurrentUser();
         if (memberIds.contains(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
@@ -39,6 +39,8 @@ public class RoomService {
         rooms.put(id, room);
         room.addMember(new Member(user.getId(), user.getName()));
         memberIds.add(user.getId());
+
+        return new CreateRoomResponse(id);
     }
 
     public synchronized void enterRoom(String id) {
