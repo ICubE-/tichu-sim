@@ -1,7 +1,6 @@
 package com.icube.sim.tichu.rooms;
 
 import com.icube.sim.tichu.auth.AuthService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
