@@ -59,4 +59,11 @@ public class RoomController {
                 "Room not found."
         ));
     }
+
+    @ExceptionHandler(TooManyMembersException.class)
+    public ResponseEntity<@NonNull ErrorDto> handleMemberCount() {
+        return ResponseEntity.badRequest().body(new ErrorDto(
+                "Too many members."
+        ));
+    }
 }
