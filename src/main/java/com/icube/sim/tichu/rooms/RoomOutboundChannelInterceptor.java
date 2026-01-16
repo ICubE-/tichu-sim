@@ -15,12 +15,12 @@ import org.springframework.web.util.pattern.PathPatternParser;
 @Component
 public class RoomOutboundChannelInterceptor implements ChannelInterceptor {
     private final PathPattern messagePattern;
-    private final RoomService roomService;
+    private final RoomRepository roomRepository;
 
-    public RoomOutboundChannelInterceptor(RoomService roomService) {
+    public RoomOutboundChannelInterceptor(RoomRepository roomRepository) {
         PathPatternParser pathPatternParser = new PathPatternParser();
         this.messagePattern = pathPatternParser.parse("/api/ws/topic/rooms/{roomId}/**");
-        this.roomService = roomService;
+        this.roomRepository = roomRepository;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class RoomOutboundChannelInterceptor implements ChannelInterceptor {
         }
 
         var roomId = matchInfo.getUriVariables().get("roomId");
-        var room = roomService.getRoom(roomId).orElse(null);
+        var room = roomRepository.findById(roomId).orElse(null);
         return room != null && room.containsMember(userId);
     }
 }

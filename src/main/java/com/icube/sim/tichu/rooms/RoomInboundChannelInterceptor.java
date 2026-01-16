@@ -17,13 +17,13 @@ import org.springframework.web.util.pattern.PathPatternParser;
 public class RoomInboundChannelInterceptor implements ChannelInterceptor {
     private final PathPattern subscribePattern;
     private final PathPattern sendPattern;
-    private final RoomService roomService;
+    private final RoomRepository roomRepository;
 
-    public RoomInboundChannelInterceptor(RoomService roomService) {
+    public RoomInboundChannelInterceptor(RoomRepository roomRepository) {
         PathPatternParser pathPatternParser = new PathPatternParser();
         this.subscribePattern = pathPatternParser.parse("/api/ws/topic/rooms/{roomId}/**");
         this.sendPattern = pathPatternParser.parse("/api/ws/app/rooms/{roomId}/**");
-        this.roomService = roomService;
+        this.roomRepository = roomRepository;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class RoomInboundChannelInterceptor implements ChannelInterceptor {
         }
 
         var roomId = matchInfo.getUriVariables().get("roomId");
-        var room = roomService.getRoom(roomId).orElseThrow(() -> new MessageDeliveryException("Room not found."));
+        var room = roomRepository.findById(roomId).orElseThrow(() -> new MessageDeliveryException("Room not found."));
         if (!room.containsMember(userId)) {
             throw new MessageDeliveryException("User not in the room.");
         }

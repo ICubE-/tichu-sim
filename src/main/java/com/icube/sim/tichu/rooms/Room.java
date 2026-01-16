@@ -2,23 +2,27 @@ package com.icube.sim.tichu.rooms;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 public class Room {
     private final String id;
     private final String name;
-    private final List<Member> members;
+    private final Set<Member> members;
 
     public Room(String id, String name) {
         this.id = id;
         this.name = name;
-        this.members = new ArrayList<>();
+        this.members = new HashSet<>();
     }
 
     public void addMember(Member member) {
         assert members.stream().noneMatch(m -> m.id().equals(member.id()));
+        if (members.size() == 4) {
+            throw new TooManyMembersException();
+        }
+
         members.add(member);
     }
 
