@@ -14,10 +14,9 @@ import java.util.stream.IntStream;
 public class RoomService {
     @Value("${spring.rooms.id-length}")
     private int ROOM_ID_LENGTH;
-
     private final AuthService authService;
-    private final Map<String, Room> rooms = new HashMap<>();
-    private final Set<Long> memberIds = new HashSet<>();
+    private final RoomRepository roomRepository;
+    private final MemberIdRepository memberIdRepository;
 
     public synchronized Map<String, Room> getRooms() {
         return rooms;
@@ -29,47 +28,39 @@ public class RoomService {
 
     public synchronized CreateRoomResponse createRoom(CreateRoomRequest request) {
         var user = authService.getCurrentUser();
-        if (memberIds.contains(user.getId())) {
+        if (memberIdRepository.exists(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
         }
 
         String id;
         do {
             id = generateRandomAlphabetString(ROOM_ID_LENGTH);
-        } while (rooms.containsKey(id));
+        } while (roomRepository.existsById(id));
 
         var room = new Room(id, request.getName());
-        rooms.put(id, room);
         room.addMember(new Member(user.getId(), user.getName()));
-        memberIds.add(user.getId());
+        roomRepository.save(room);
+        memberIdRepository.save(user.getId());
 
         return new CreateRoomResponse(id);
     }
 
     public synchronized void enterRoom(String id) {
         var user = authService.getCurrentUser();
-        if (memberIds.contains(user.getId())) {
+        if (memberIdRepository.exists(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
         }
 
-        var room = rooms.get(id);
-        if (room == null) {
-            throw new RoomNotFoundException();
-        }
-
+        var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
         room.addMember(new Member(user.getId(), user.getName()));
-        memberIds.add(user.getId());
+        memberIdRepository.save(user.getId());
     }
 
     public synchronized void leaveRoom(String id) {
         var user = authService.getCurrentUser();
-        var room = rooms.get(id);
-        if (room == null) {
-            throw new RoomNotFoundException();
-        }
-
+        var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
         room.removeMember(user.getId());
-        memberIds.remove(user.getId());
+        memberIdRepository.delete(user.getId());
     }
 
     private static String generateRandomAlphabetString(int length) {
