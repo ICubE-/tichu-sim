@@ -11,10 +11,10 @@ public class ChatController {
     @SendTo("/api/ws/topic/rooms/{roomId}/chat")
     public ChatMessage chat(
             @DestinationVariable("roomId") String roomId,
-            @Payload ChatSend chatMessage,
+            @Payload ChatSend chatSend,
             Principal principal
     ) {
         var userId = Long.valueOf(principal.getName());
-        return new ChatMessage(userId, chatMessage.getMessage());
+        return new ChatMessage(userId, chatSend.getMessage());
     }
 }
