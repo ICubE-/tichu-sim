@@ -3,6 +3,7 @@ package com.icube.sim.tichu.rooms;
 import com.icube.sim.tichu.auth.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final MemberIdRepository memberIdRepository;
     private final RoomMapper roomMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public synchronized List<RoomOpaqueDto> getRooms() {
         return roomRepository.findAll().stream().map(roomMapper::toOpaqueDto).toList();
@@ -62,6 +64,8 @@ public class RoomService {
         var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
         room.addMember(new Member(user.getId(), user.getName()));
         memberIdRepository.save(user.getId());
+
+        notifyEnter(id, user.getId(), user.getName());
     }
 
     public synchronized void leaveRoom(String id) {
@@ -70,9 +74,21 @@ public class RoomService {
         room.removeMember(user.getId());
         memberIdRepository.delete(user.getId());
 
+        notifyLeave(id, user.getId(), user.getName());
+
         if (room.getMembers().isEmpty()) {
             roomRepository.deleteById(id);
         }
+    }
+
+    private void notifyEnter(String roomId, Long userId, String userName) {
+        var chatMessage = MembersMessage.enter(userId, userName);
+        messagingTemplate.convertAndSend("/api/ws/topic/rooms/" + roomId + "/members", chatMessage);
+    }
+
+    private void notifyLeave(String roomId, Long userId, String userName) {
+        var chatMessage = MembersMessage.leave(userId, userName);
+        messagingTemplate.convertAndSend("/api/ws/topic/rooms/" + roomId + "/members", chatMessage);
     }
 
     private static String generateRandomAlphabetString(int length) {
