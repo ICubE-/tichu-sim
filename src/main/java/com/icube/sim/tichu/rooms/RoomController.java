@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Map;
+import java.util.List;
 
 @AllArgsConstructor
 @RestController
@@ -17,7 +17,7 @@ public class RoomController {
     private final RoomService roomService;
 
     @GetMapping
-    public Map<String, Room> getRooms() {
+    public List<RoomOpaqueDto> getRooms() {
         return roomService.getRooms();
     }
 
@@ -29,6 +29,11 @@ public class RoomController {
         var response = roomService.createRoom(request);
         var uri = uriBuilder.path("/api/rooms/{id}").buildAndExpand(response.getId()).toUri();
         return ResponseEntity.created(uri).body(response);
+    }
+
+    @GetMapping("/{id}")
+    public RoomDto getRoom(@PathVariable(name = "id") String id) {
+        return roomService.getRoom(id);
     }
 
     @PostMapping("/{id}")
