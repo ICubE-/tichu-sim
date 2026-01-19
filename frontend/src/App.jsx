@@ -2,7 +2,9 @@ import React from 'react';
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import {AuthProvider, useAuth} from './useAuth.jsx';
 import LoginPage from './LoginPage';
+import NavBar from "./NavBar";
 import HomePage from './HomePage';
+import './App.css';
 
 const ProtectedRoute = ({children}) => {
   const {ready: authReady, accessToken} = useAuth();
@@ -28,6 +30,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
+                <NavBar/>
                 <HomePage/>
               </ProtectedRoute>
             }
