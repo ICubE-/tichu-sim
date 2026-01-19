@@ -8,7 +8,7 @@ const api = axios.create({
 });
 
 export const useAxios = () => {
-  const {accessToken, setAccessToken, logout} = useAuth();
+  const {accessToken, login, logout} = useAuth();
 
   useEffect(() => {
     const requestIntercept = api.interceptors.request.use(
@@ -34,7 +34,7 @@ export const useAxios = () => {
           const res = await axios.post('/api/auth/refresh', {}, {withCredentials: true});
           const newAccessToken = res.data.accessToken;
 
-          setAccessToken(newAccessToken);
+          login(newAccessToken);
 
           prevRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
           return api(prevRequest);
@@ -49,7 +49,7 @@ export const useAxios = () => {
       api.interceptors.request.eject(requestIntercept);
       api.interceptors.response.eject(responseIntercept);
     };
-  }, [accessToken, setAccessToken, logout]);
+  }, [accessToken, login, logout]);
 
   return api;
 };
