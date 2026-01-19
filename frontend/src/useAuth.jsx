@@ -5,14 +5,31 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({children}) => {
   const [ready, setReady] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const fetchUserInfo = async (token) => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+    }
+  };
 
   const login = (token) => {
     setAccessToken(token);
+    fetchUserInfo(token).then();
     setReady(true);
   };
 
   const logout = () => {
     setAccessToken(null);
+    setUser(null);
     setReady(true);
   };
 
@@ -26,6 +43,7 @@ export const AuthProvider = ({children}) => {
       if (response.ok) {
         const data = await response.json();
         setAccessToken(data.accessToken);
+        await fetchUserInfo(data.accessToken);
       } else {
         logout();
       }
@@ -37,13 +55,13 @@ export const AuthProvider = ({children}) => {
     }
   };
 
-  // Refresh tokens when window is refreshed
+  // Refresh tokens when a window is refreshed
   useEffect(() => {
     refresh().then();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ready, accessToken, login, logout, refresh}}>
+    <AuthContext.Provider value={{ready, accessToken, user, login, logout, refresh}}>
       {children}
     </AuthContext.Provider>
   );
