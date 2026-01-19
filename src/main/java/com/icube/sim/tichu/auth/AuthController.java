@@ -58,9 +58,9 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public String getMe() {
+    public MeResponse getMe() {
         var user = authService.getCurrentUser();
-        return user.getName();
+        return new MeResponse(user.getId(), user.getName());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
