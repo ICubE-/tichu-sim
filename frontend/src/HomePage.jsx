@@ -1,65 +1,112 @@
 import React, {useEffect, useState} from 'react';
-import {useAxios} from './useAxios.jsx';
-import {useAuth} from './useAuth.jsx';
+import {useNavigate} from 'react-router-dom';
+import {useRoom} from "./useRoom.jsx";
+import './HomePage.css';
 
 const HomePage = () => {
-  const api = useAxios();
+  const navigate = useNavigate();
+  const {fetchMyRoom, fetchRooms, createRoom, enterRoom} = useRoom();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchRooms().finally(() => setLoading(false));
-  }, []);
-
-  const fetchRooms = async () => {
+  const checkMyRoom = async () => {
     try {
-      const response = await api.get('/rooms');
-      setRooms(response.data);
+      const myRoom = await fetchMyRoom();
+      if (myRoom !== null) {
+        navigate(`/${myRoom.id}`, {replace: true});
+      }
     } catch (error) {
-      console.error('Failed to get rooms:', error);
+      console.error('Failed to fetch my room:', error);
     }
   };
 
+  const handleFetchRooms = async () => {
+    try {
+      setRooms(await fetchRooms());
+    } catch (error) {
+      console.error('Failed to fetch rooms:', error);
+      alert('Failed to get rooms data. Please try again.')
+    }
+  }
+
+  const handleCreateRoom = async () => {
+    const name = prompt('Enter room name:');
+    if (!name) {
+      return;
+    }
+    try {
+      const res = await createRoom(name);
+      navigate(`/${res.id}`);
+    } catch (error) {
+      console.error('Failed to create room:', error);
+    }
+  }
+
+  const handleEnterRoom = async (room) => {
+    if (room.memberCount >= 4 || room.isGamePlaying) {
+      alert('Unable to enter the room.');
+      return;
+    }
+    try {
+      await enterRoom(room.id);
+      navigate(`/${room.id}`);
+    } catch (error) {
+      console.error('Failed to enter room:', error)
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    checkMyRoom().then();
+    handleFetchRooms().then();
+    setLoading(false);
+  }, []);
+
   return (
-    <div style={{padding: '20px', width: '100%', maxWidth: '1000px'}}>
-      <div style={{
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginTop: '30px',
-        marginBottom: '10px'
-      }}>
-        <h2 style={{margin: 0}}>Rooms List</h2>
-        <button onClick={fetchRooms} style={{cursor: 'pointer'}}>Refresh</button>
+    <div className="home-container">
+      <div className="home-header">
+        <h2>Rooms List</h2>
+        <div className="header-buttons">
+          <button onClick={handleCreateRoom}>
+            Create Room
+          </button>
+          <button onClick={handleFetchRooms}>Refresh</button>
+        </div>
       </div>
 
       {loading && rooms.length === 0 ? (
         <p>Loading...</p>
       ) : (
-        <table border="1" style={{width: '100%', borderCollapse: 'collapse', marginTop: '10px'}}>
+        <table className="rooms-table">
           <thead>
-          <tr style={{backgroundColor: '#f2f2f2'}}>
-            <th style={{padding: '10px'}}>ID</th>
-            <th style={{padding: '10px'}}>Name</th>
-            <th style={{padding: '10px'}}>Status</th>
-            <th style={{padding: '10px'}}>Players</th>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Players</th>
           </tr>
           </thead>
           <tbody>
           {rooms.length > 0 ? (
-            rooms.map((room) => (
-              <tr key={room.id} style={{textAlign: 'center'}}>
-                <td style={{padding: '10px'}}>{room.id}</td>
-                <td style={{padding: '10px'}}>{room.name || `방 ${room.id}`}</td>
-                <td style={{padding: '10px'}}>{room.isGamePlaying ? '게임 진행 중' : '대기 중'}</td>
-                <td style={{padding: '10px'}}>{room.memberCount} / 4</td>
-              </tr>
-            ))
+            rooms.map((room) => {
+              const isAvailable = room.memberCount < 4 && !room.isGamePlaying;
+              return (
+                <tr
+                  key={room.id}
+                  onClick={() => handleEnterRoom(room)}
+                  className={`room-row ${isAvailable ? 'available' : 'unavailable'}`}
+                >
+                  <td>{room.id}</td>
+                  <td>{room.name || `방 ${room.id}`}</td>
+                  <td>{room.isGamePlaying ? '게임 진행 중' : '대기 중'}</td>
+                  <td>{room.memberCount} / 4</td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              <td colSpan="4" style={{padding: '20px', textAlign: 'center'}}>
-                현재 생성된 방이 없습니다.
+              <td colSpan="4" className="no-rooms">
+                No room exists.
               </td>
             </tr>
           )}
