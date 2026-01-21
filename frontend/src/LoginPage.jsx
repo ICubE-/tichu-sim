@@ -1,9 +1,7 @@
 import React, {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
 import {useAuth} from './useAuth.jsx';
 
 const LoginPage = () => {
-  const navigate = useNavigate();
   const {login} = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +17,6 @@ const LoginPage = () => {
     if (response.ok) {
       const data = await response.json();
       login(data.accessToken);
-      navigate('/');
     } else {
       alert('Login failed');
     }
