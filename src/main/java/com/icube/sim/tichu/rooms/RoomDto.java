@@ -9,5 +9,5 @@ import java.util.List;
 public class RoomDto {
     private String id;
     private String name;
-    private List<Member> members;
+    private List<MemberDto> members;
 }

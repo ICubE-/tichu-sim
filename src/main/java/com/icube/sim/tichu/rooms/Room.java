@@ -24,6 +24,7 @@ public class Room {
         }
 
         members.add(member);
+        member.setRoom(this);
     }
 
     public void removeMember(Long memberId) {
