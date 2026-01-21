@@ -46,6 +46,12 @@ public class RoomService {
         return new CreateRoomResponse(id);
     }
 
+    public synchronized Optional<RoomDto> getMyRoom() {
+        var user = authService.getCurrentUser();
+        var myRoom = memberRepository.findById(user.getId()).map(Member::getRoom);
+        return myRoom.map(roomMapper::toDto);
+    }
+
     public synchronized RoomDto getRoom(String id) {
         var user = authService.getCurrentUser();
         var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
