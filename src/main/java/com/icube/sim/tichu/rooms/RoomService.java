@@ -72,6 +72,11 @@ public class RoomService {
 
     public synchronized void leaveRoom(String id) {
         var user = authService.getCurrentUser();
+        var member = memberRepository.findById(user.getId()).orElse(null);
+        if (member == null || member.getRoom() == null || !member.getRoom().getId().equals(id)) {
+            return;
+        }
+
         var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
         room.removeMember(user.getId());
         memberRepository.deleteById(user.getId());
