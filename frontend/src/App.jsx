@@ -1,45 +1,48 @@
 import React from 'react';
-import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
+import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
 import {AuthProvider, useAuth} from './useAuth.jsx';
 import LoginPage from './LoginPage';
 import NavBar from "./NavBar";
 import HomePage from './HomePage';
+import RoomDetailPage from './RoomDetailPage';
 import './App.css';
 
-const ProtectedRoute = ({children}) => {
+const AppContent = () => {
   const {ready: authReady, accessToken} = useAuth();
-
   if (!authReady) {
     return <div>Authenticating...</div>;
   }
+
   if (!accessToken) {
-    return <Navigate to="/login" replace/>;
+    return (
+      <div className="container">
+        <Routes>
+          <Route path="/" element={<LoginPage/>}/>
+          <Route path="*" element={<Navigate to="/" replace/>}/>
+        </Routes>
+      </div>
+    );
   }
 
-  return children;
+  return (
+    <div className="container">
+      <NavBar/>
+      <Routes>
+        <Route path="/" element={<HomePage/>}/>
+        <Route path="/:roomId" element={<RoomDetailPage/>}/>
+        <Route path="*" element={<Navigate to="/" replace/>}/>
+      </Routes>
+    </div>
+  );
 };
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage/>}/>
-
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <NavBar/>
-                <HomePage/>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/" replace/>}/>
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent/>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
