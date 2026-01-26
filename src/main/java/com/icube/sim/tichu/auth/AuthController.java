@@ -63,6 +63,12 @@ public class AuthController {
         return new MeResponse(user.getId(), user.getName());
     }
 
+    @GetMapping("/issue/web-socket-token")
+    public JwtResponse issueWebSocketToken() {
+        var webSocketToken = authService.issueWebSocketToken();
+        return new JwtResponse(webSocketToken.toString());
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<@NonNull Void> handleBadCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

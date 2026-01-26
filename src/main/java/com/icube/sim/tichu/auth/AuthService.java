@@ -1,5 +1,6 @@
 package com.icube.sim.tichu.auth;
 
+import com.icube.sim.tichu.auth.jwt.Jwt;
 import com.icube.sim.tichu.auth.jwt.JwtIssueResult;
 import com.icube.sim.tichu.auth.jwt.JwtService;
 import com.icube.sim.tichu.users.User;
@@ -54,5 +55,9 @@ public class AuthService {
         var newRefreshToken = jwtService.generateRefreshToken(user);
 
         return new JwtIssueResult(accessToken, newRefreshToken);
+    }
+
+    public Jwt issueWebSocketToken() {
+        return jwtService.generateWebSocketToken(getCurrentUser());
     }
 }
