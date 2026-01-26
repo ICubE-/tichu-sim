@@ -23,6 +23,10 @@ public class JwtService {
         return generateToken(user, jwtConfig.getRefreshTokenExpiration());
     }
 
+    public Jwt generateWebSocketToken(User user) {
+        return generateToken(user, jwtConfig.getWebSocketTokenExpiration());
+    }
+
     private Jwt generateToken(User user, long tokenExpiration) {
         var claims = Jwts.claims()
                 .subject(user.getId().toString())

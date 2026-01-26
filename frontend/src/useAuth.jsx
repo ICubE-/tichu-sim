@@ -42,8 +42,8 @@ export const AuthProvider = ({children}) => {
 
       if (response.ok) {
         const data = await response.json();
-        setAccessToken(data.accessToken);
-        await fetchUserInfo(data.accessToken);
+        setAccessToken(data.token);
+        await fetchUserInfo(data.token);
       } else {
         logout();
       }
