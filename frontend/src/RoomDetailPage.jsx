@@ -16,7 +16,7 @@ const RoomDetailPage = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
 
-  const handleLeave = async () => {
+  const handleLeaveRoom = async () => {
     try {
       await leaveRoom(roomId);
       navigate('/');
@@ -118,7 +118,7 @@ const RoomDetailPage = () => {
     <div className="room-detail-container">
       <div className="room-detail-header">
         <h2>[{room.id}] {room.name}</h2>
-        <button onClick={handleLeave} className="leave-button">Leave</button>
+        <button onClick={handleLeaveRoom} className="leave-button">Leave</button>
       </div>
 
       <div className="room-content">
