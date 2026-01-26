@@ -16,7 +16,7 @@ const LoginPage = () => {
 
     if (response.ok) {
       const data = await response.json();
-      login(data.accessToken);
+      login(data.token);
     } else {
       alert('Login failed');
     }
