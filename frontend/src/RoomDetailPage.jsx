@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {useRoom} from "./useRoom.jsx";
+import {useStomp} from "./useStomp.jsx"
 import './RoomDetailPage.css';
+import {useAxios} from "./useAxios.jsx";
 
 const RoomDetailPage = () => {
   const {roomId} = useParams();
@@ -9,6 +11,10 @@ const RoomDetailPage = () => {
   const {fetchMyRoom, enterRoom, leaveRoom, fetchRoom} = useRoom();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const stomp = useStomp();
+  const api = useAxios();
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
 
   const handleLeave = async () => {
     try {
@@ -54,6 +60,56 @@ const RoomDetailPage = () => {
     init().then();
   }, [roomId]);
 
+  const handleMemberChange = (memberMessage) => {
+    setRoom((prevRoom) => {
+      if (!prevRoom) {
+        return prevRoom;
+      }
+
+      let members = [...(prevRoom.members || [])];
+      if (memberMessage.type === 'ENTER') {
+        if (!members.find(m => m.id === memberMessage.id)) {
+          members.push({ id: memberMessage.id, name: memberMessage.name });
+        }
+      } else if (memberMessage.type === 'LEAVE') {
+        members = members.filter(m => m.id !== memberMessage.id);
+      }
+
+      return { ...prevRoom, members: members };
+    });
+  };
+
+  const handleReceiveChatMessage = (chatMessage) => {
+    setChatMessages((prev) => [...prev, chatMessage]);
+  };
+
+  const handleSendChatMessage = () => {
+    if (chatInput.trim() === '') {
+      return;
+    }
+
+    stomp.publish(`/app/rooms/${roomId}/chat`, {
+      message: chatInput
+    });
+
+    setChatInput('');
+  };
+
+  const handleKeyPressOnChatInput = (e) => {
+    if (e.key === 'Enter') {
+      handleSendChatMessage();
+    }
+  };
+
+  useEffect(() => {
+    stomp.subscribe(`/topic/rooms/${roomId}/members`, handleMemberChange);
+    stomp.subscribe(`/topic/rooms/${roomId}/chat`, handleReceiveChatMessage);
+    api.get('/auth/issue/web-socket-token')
+      .then(response => response.data.token)
+      .then(token => stomp.connect(token));
+    return stomp.disconnect;
+  }, [roomId]);
+
   if (loading || room === null) {
     return <div style={{padding: '20px'}}>Loading...</div>;
   }
@@ -92,17 +148,25 @@ const RoomDetailPage = () => {
             <strong>Chat</strong>
           </div>
           <div className="chat-messages">
-            <p className="chat-placeholder">
-              TODO
-            </p>
+            {chatMessages.length === 0 ? (
+              <p className="chat-placeholder">No messages yet.</p>
+            ) : (
+              chatMessages.map((msg, index) => (
+                <div key={index} className="chat-message">
+                  <strong>{room.members?.find(m => m.id === msg.userId)?.name || 'Unknown'}:</strong> {msg.message}
+                </div>
+              ))
+            )}
           </div>
           <div className="chat-input-area">
             <input
               type="text"
               placeholder="Enter a message..."
-              disabled
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={handleKeyPressOnChatInput}
             />
-            <button disabled>Send</button>
+            <button onClick={handleSendChatMessage}>Send</button>
           </div>
         </div>
       </div>
