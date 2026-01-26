@@ -18,7 +18,7 @@ public class RoomService {
     private int ROOM_ID_LENGTH;
     private final AuthService authService;
     private final RoomRepository roomRepository;
-    private final MemberIdRepository memberIdRepository;
+    private final MemberRepository memberRepository;
     private final RoomMapper roomMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -28,7 +28,7 @@ public class RoomService {
 
     public synchronized CreateRoomResponse createRoom(CreateRoomRequest request) {
         var user = authService.getCurrentUser();
-        if (memberIdRepository.exists(user.getId())) {
+        if (memberRepository.existsById(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
         }
 
@@ -38,11 +38,18 @@ public class RoomService {
         } while (roomRepository.existsById(id));
 
         var room = new Room(id, request.getName());
-        room.addMember(new Member(user.getId(), user.getName()));
+        var member = new Member(user.getId(), user.getName());
+        room.addMember(member);
         roomRepository.save(room);
-        memberIdRepository.save(user.getId());
+        memberRepository.save(member);
 
         return new CreateRoomResponse(id);
+    }
+
+    public synchronized Optional<RoomDto> getMyRoom() {
+        var user = authService.getCurrentUser();
+        var myRoom = memberRepository.findById(user.getId()).map(Member::getRoom);
+        return myRoom.map(roomMapper::toDto);
     }
 
     public synchronized RoomDto getRoom(String id) {
@@ -57,22 +64,28 @@ public class RoomService {
 
     public synchronized void enterRoom(String id) {
         var user = authService.getCurrentUser();
-        if (memberIdRepository.exists(user.getId())) {
+        if (memberRepository.existsById(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
         }
 
         var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
-        room.addMember(new Member(user.getId(), user.getName()));
-        memberIdRepository.save(user.getId());
+        var member = new Member(user.getId(), user.getName());
+        room.addMember(member);
+        memberRepository.save(member);
 
         notifyEnter(id, user.getId(), user.getName());
     }
 
     public synchronized void leaveRoom(String id) {
         var user = authService.getCurrentUser();
+        var member = memberRepository.findById(user.getId()).orElse(null);
+        if (member == null || member.getRoom() == null || !member.getRoom().getId().equals(id)) {
+            return;
+        }
+
         var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
         room.removeMember(user.getId());
-        memberIdRepository.delete(user.getId());
+        memberRepository.deleteById(user.getId());
 
         notifyLeave(id, user.getId(), user.getName());
 

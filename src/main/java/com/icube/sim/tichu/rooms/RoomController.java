@@ -31,6 +31,16 @@ public class RoomController {
         return ResponseEntity.created(uri).body(response);
     }
 
+    // Possible URI collision with `getRoom`, but it cannot collide because every room ID is 5 characters long.
+    @GetMapping("/me")
+    public ResponseEntity<@NonNull RoomDto> getMyRoom() {
+        var myRoom = roomService.getMyRoom().orElse(null);
+        if (myRoom == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(myRoom);
+    }
+
     @GetMapping("/{id}")
     public RoomDto getRoom(@PathVariable(name = "id") String id) {
         return roomService.getRoom(id);
