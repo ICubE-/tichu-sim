@@ -1,5 +1,6 @@
 package com.icube.sim.tichu;
 
+import com.icube.sim.tichu.auth.jwt.JwtAuthenticationInterceptor;
 import com.icube.sim.tichu.rooms.RoomInboundChannelInterceptor;
 import com.icube.sim.tichu.rooms.RoomOutboundChannelInterceptor;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${spring.cors.allowed-origin}")
     private String corsAllowedOrigin;
+    private final JwtAuthenticationInterceptor jwtAuthenticationInterceptor;
     private final RoomInboundChannelInterceptor roomInboundChannelInterceptor;
     private final RoomOutboundChannelInterceptor roomOutboundChannelInterceptor;
 
@@ -34,7 +36,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(roomInboundChannelInterceptor);
+        registration.interceptors(jwtAuthenticationInterceptor, roomInboundChannelInterceptor);
     }
 
     @Override

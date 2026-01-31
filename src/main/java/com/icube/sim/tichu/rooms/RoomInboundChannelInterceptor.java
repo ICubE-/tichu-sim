@@ -1,6 +1,5 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.auth.jwt.JwtService;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.server.PathContainer;
@@ -23,47 +22,17 @@ public class RoomInboundChannelInterceptor implements ChannelInterceptor {
     private final PathPattern subscribePattern;
     private final PathPattern sendPattern;
     private final RoomRepository roomRepository;
-    private final JwtService jwtService;
 
-    public RoomInboundChannelInterceptor(RoomRepository roomRepository, JwtService jwtService) {
+    public RoomInboundChannelInterceptor(RoomRepository roomRepository) {
         PathPatternParser pathPatternParser = new PathPatternParser();
         this.subscribePattern = pathPatternParser.parse("/topic/rooms/{roomId}/**");
         this.sendPattern = pathPatternParser.parse("/app/rooms/{roomId}/**");
         this.roomRepository = roomRepository;
-        this.jwtService = jwtService;
     }
 
     @Override
     public @Nullable Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         var accessor = StompHeaderAccessor.wrap(message);
-        var sessionAttributes = accessor.getSessionAttributes();
-        assert sessionAttributes != null;
-
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            var authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new MessageDeliveryException("Access denied.");
-            }
-
-            var token = authHeader.replace("Bearer ", "");
-            var jwt = jwtService.parse(token).orElse(null);
-            if (jwt == null || jwt.isExpired()) {
-                throw new MessageDeliveryException("Access denied.");
-            }
-
-            sessionAttributes.put("userId", jwt.getUserId());
-        }
-
-        var userId = (Long) sessionAttributes.get("userId");
-        if (userId != null) {
-            var authentication = new UsernamePasswordAuthenticationToken(
-                    userId,
-                    null,
-                    Collections.emptyList()
-            );
-            accessor.setUser(authentication);
-        }
-
         var destination = accessor.getDestination();
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             checkDestination(destination, subscribePattern, "Invalid subscribe path.", userId);
