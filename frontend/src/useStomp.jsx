@@ -38,16 +38,15 @@ export const useStomp = () => {
   };
 
   const subscribe = (destination, callback) => {
-    const dest = '/api/ws' + destination;
-    if (subscriptions.current[dest]?.subscription) {
-      subscriptions.current[dest]?.subscription.unsubscribe();
+    if (subscriptions.current[destination]?.subscription) {
+      subscriptions.current[destination]?.subscription.unsubscribe();
     }
-    subscriptions.current[dest] = {
+    subscriptions.current[destination] = {
       callback: callback,
       subscription: !client.active ?
         null :
         client.subscribe(
-          dest,
+          destination,
           (message) => {
             callback(JSON.parse(message.body))
           }
@@ -56,14 +55,13 @@ export const useStomp = () => {
   };
 
   const unsubscribe = (destination) => {
-    const dest = '/api/ws' + destination;
-    subscriptions.current[dest]?.subscription.unsubscribe();
-    delete subscriptions.current[dest];
+    subscriptions.current[destination]?.subscription.unsubscribe();
+    delete subscriptions.current[destination];
   };
 
   const publish = (destination, message) => {
     client.publish({
-      destination: '/api/ws' + destination,
+      destination: destination,
       body: JSON.stringify(message)
     });
   };

@@ -27,8 +27,8 @@ public class RoomInboundChannelInterceptor implements ChannelInterceptor {
 
     public RoomInboundChannelInterceptor(RoomRepository roomRepository, JwtService jwtService) {
         PathPatternParser pathPatternParser = new PathPatternParser();
-        this.subscribePattern = pathPatternParser.parse("/api/ws/topic/rooms/{roomId}/**");
-        this.sendPattern = pathPatternParser.parse("/api/ws/app/rooms/{roomId}/**");
+        this.subscribePattern = pathPatternParser.parse("/topic/rooms/{roomId}/**");
+        this.sendPattern = pathPatternParser.parse("/app/rooms/{roomId}/**");
         this.roomRepository = roomRepository;
         this.jwtService = jwtService;
     }

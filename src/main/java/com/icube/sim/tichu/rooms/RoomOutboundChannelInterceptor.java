@@ -19,7 +19,7 @@ public class RoomOutboundChannelInterceptor implements ChannelInterceptor {
 
     public RoomOutboundChannelInterceptor(RoomRepository roomRepository) {
         PathPatternParser pathPatternParser = new PathPatternParser();
-        this.messagePattern = pathPatternParser.parse("/api/ws/topic/rooms/{roomId}/**");
+        this.messagePattern = pathPatternParser.parse("/topic/rooms/{roomId}/**");
         this.roomRepository = roomRepository;
     }
 
