@@ -9,13 +9,11 @@ import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 
-import java.util.Collections;
+import java.security.Principal;
 
 @Component
 public class RoomInboundChannelInterceptor implements ChannelInterceptor {
@@ -34,30 +32,43 @@ public class RoomInboundChannelInterceptor implements ChannelInterceptor {
     public @Nullable Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         var accessor = StompHeaderAccessor.wrap(message);
         var destination = accessor.getDestination();
+        if (destination == null) {
+            return message;
+        }
+
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-            checkDestination(destination, subscribePattern, "Invalid subscribe path.", userId);
+            var roomId = tryParseAndExtractRoomId(destination, subscribePattern);
+            if (roomId != null) {
+                checkRoomMembers(roomId, accessor.getUser());
+            }
         }
         if (StompCommand.SEND.equals(accessor.getCommand())) {
-            checkDestination(destination, sendPattern, "Invalid send path.", userId);
+            var roomId = tryParseAndExtractRoomId(destination, sendPattern);
+            if (roomId != null) {
+                checkRoomMembers(roomId, accessor.getUser());
+            }
         }
 
-        return MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
+        return message;
     }
 
-    private void checkDestination(
-            String destination,
-            PathPattern validPattern,
-            String matchFailDescription,
-            Long userId
-    ) {
+    private String tryParseAndExtractRoomId(String destination, PathPattern pattern) {
         var path = PathContainer.parsePath(destination);
-        var matchInfo = validPattern.matchAndExtract(path);
+        var matchInfo = pattern.matchAndExtract(path);
         if (matchInfo == null) {
-            throw new MessageDeliveryException(matchFailDescription);
+            return null;
         }
+        return matchInfo.getUriVariables().get("roomId");
+    }
 
-        var roomId = matchInfo.getUriVariables().get("roomId");
+    private void checkRoomMembers(
+            String roomId,
+            @Nullable Principal principal
+    ) {
         var room = roomRepository.findById(roomId).orElseThrow(() -> new MessageDeliveryException("Room not found."));
+
+        assert principal != null;
+        var userId = Long.valueOf(principal.getName());
         if (!room.containsMember(userId)) {
             throw new MessageDeliveryException("User not in the room.");
         }
