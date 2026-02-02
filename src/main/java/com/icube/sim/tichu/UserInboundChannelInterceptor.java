@@ -12,7 +12,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 
-public class UserInboundChannelInterceptor implements ChannelInterceptor {
+public class UserInboundChannelInterceptor implements ChannelInterceptor, DestinationCheckerInterceptor {
     private final PathPattern pattern;
 
     public UserInboundChannelInterceptor() {
@@ -45,7 +45,7 @@ public class UserInboundChannelInterceptor implements ChannelInterceptor {
             throw new MessageDeliveryException(message, "Access denied.");
         }
 
-        return message;
+        return destinationChecked(message);
     }
 
     private String tryParseAndExtractUserId(String destination) {

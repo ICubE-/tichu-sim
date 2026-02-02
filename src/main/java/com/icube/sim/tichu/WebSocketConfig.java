@@ -39,8 +39,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(
                 jwtAuthenticationInterceptor,
+                new DestinationCheckInitializeInterceptor(),
                 roomInboundChannelInterceptor,
-                new UserInboundChannelInterceptor()
+                new UserInboundChannelInterceptor(),
+                new DestinationGuardInterceptor()
         );
     }
 

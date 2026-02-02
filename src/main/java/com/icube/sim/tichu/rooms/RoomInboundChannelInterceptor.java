@@ -1,5 +1,6 @@
 package com.icube.sim.tichu.rooms;
 
+import com.icube.sim.tichu.DestinationCheckerInterceptor;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.server.PathContainer;
@@ -16,7 +17,7 @@ import org.springframework.web.util.pattern.PathPatternParser;
 import java.security.Principal;
 
 @Component
-public class RoomInboundChannelInterceptor implements ChannelInterceptor {
+public class RoomInboundChannelInterceptor implements ChannelInterceptor, DestinationCheckerInterceptor {
     private final PathPattern subscribePattern;
     private final PathPattern sendPattern;
     private final RoomRepository roomRepository;
@@ -40,12 +41,14 @@ public class RoomInboundChannelInterceptor implements ChannelInterceptor {
             var roomId = tryParseAndExtractRoomId(destination, subscribePattern);
             if (roomId != null) {
                 checkRoomMembers(roomId, accessor.getUser());
+                return destinationChecked(message);
             }
         }
         if (StompCommand.SEND.equals(accessor.getCommand())) {
             var roomId = tryParseAndExtractRoomId(destination, sendPattern);
             if (roomId != null) {
                 checkRoomMembers(roomId, accessor.getUser());
+                return destinationChecked(message);
             }
         }
 
