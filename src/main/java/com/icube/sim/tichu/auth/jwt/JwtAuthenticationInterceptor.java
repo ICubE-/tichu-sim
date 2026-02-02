@@ -18,6 +18,7 @@ import java.util.Collections;
 @AllArgsConstructor
 @Component
 public class JwtAuthenticationInterceptor implements ChannelInterceptor {
+    private static final String AUTH_TOKEN_KEY = "authToken";
     private final JwtService jwtService;
 
     @Override
@@ -38,17 +39,18 @@ public class JwtAuthenticationInterceptor implements ChannelInterceptor {
                 throw new MessageDeliveryException(message, "Access denied.");
             }
 
-            sessionAttributes.put("userId", jwt.getUserId());
-        }
-
-        var userId = (Long) sessionAttributes.get("userId");
-        if (userId != null) {
             var authentication = new UsernamePasswordAuthenticationToken(
-                    userId,
+                    jwt.getUserId(),
                     null,
                     Collections.emptyList()
             );
+            sessionAttributes.put(AUTH_TOKEN_KEY, authentication);
             accessor.setUser(authentication);
+        } else {
+            var authentication = (UsernamePasswordAuthenticationToken) sessionAttributes.get(AUTH_TOKEN_KEY);
+            if (authentication != null) {
+                accessor.setUser(authentication);
+            }
         }
 
         return MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
