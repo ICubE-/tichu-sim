@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.DestinationCheckerInterceptor;
+import com.icube.sim.tichu.common.websocket.DestinationCheckerInterceptor;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.server.PathContainer;

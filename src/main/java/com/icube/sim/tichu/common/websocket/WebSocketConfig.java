@@ -1,4 +1,4 @@
-package com.icube.sim.tichu;
+package com.icube.sim.tichu.common.websocket;
 
 import com.icube.sim.tichu.auth.jwt.JwtAuthenticationInterceptor;
 import com.icube.sim.tichu.rooms.RoomInboundChannelInterceptor;

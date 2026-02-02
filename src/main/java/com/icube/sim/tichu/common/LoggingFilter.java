@@ -1,4 +1,4 @@
-package com.icube.sim.tichu;
+package com.icube.sim.tichu.common;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

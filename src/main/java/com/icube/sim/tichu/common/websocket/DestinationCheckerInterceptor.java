@@ -1,4 +1,4 @@
-package com.icube.sim.tichu;
+package com.icube.sim.tichu.common.websocket;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;

@@ -1,4 +1,4 @@
-package com.icube.sim.tichu;
+package com.icube.sim.tichu.common.websocket;
 
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
