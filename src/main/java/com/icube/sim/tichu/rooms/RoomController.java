@@ -1,6 +1,7 @@
 package com.icube.sim.tichu.rooms;
 
 import com.icube.sim.tichu.common.ErrorDto;
+import com.icube.sim.tichu.game.GameHasAlreadyStartedException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -74,6 +75,13 @@ public class RoomController {
     public ResponseEntity<@NonNull ErrorDto> handleMemberCount() {
         return ResponseEntity.badRequest().body(new ErrorDto(
                 "Too many members."
+        ));
+    }
+
+    @ExceptionHandler(GameHasAlreadyStartedException.class)
+    public ResponseEntity<@NonNull ErrorDto> handleGameHasAlreadyStarted() {
+        return ResponseEntity.badRequest().body(new ErrorDto(
+                "Game has already started."
         ));
     }
 }

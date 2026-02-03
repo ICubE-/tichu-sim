@@ -9,8 +9,11 @@ import java.util.Map;
 @Mapper(componentModel = "spring")
 public interface RoomMapper {
     @Mapping(target = "memberCount", expression = "java(room.getMembers().size())")
+    @Mapping(target = "hasGameStarted", expression = "java(room.hasGameStarted())")
     RoomOpaqueDto toOpaqueDto(Room room);
 
+    @Mapping(target = "hasGameStarted", expression = "java(room.hasGameStarted())")
+    @Mapping(target = "gameRule", expression = "java(room.getGameRule())")
     RoomDto toDto(Room room);
 
     // Helper method
