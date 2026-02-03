@@ -10,4 +10,6 @@ public class RoomDto {
     private String id;
     private String name;
     private List<MemberDto> members;
+    private boolean hasGameStarted;
+    private GameRule gameRule;
 }
