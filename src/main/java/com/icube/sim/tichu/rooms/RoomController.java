@@ -1,7 +1,7 @@
 package com.icube.sim.tichu.rooms;
 
 import com.icube.sim.tichu.common.ErrorDto;
-import com.icube.sim.tichu.game.GameHasAlreadyStartedException;
+import com.icube.sim.tichu.game.exceptions.GameHasAlreadyStartedException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
