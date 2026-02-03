@@ -31,5 +31,23 @@ public class Game {
     }
 
     private void setPlayers(Map<Long, Member> members) {
+        var memberIds = new ArrayList<>(members.keySet());
+        Collections.shuffle(memberIds);
+        var teams = rule.getDeterminedTeams(memberIds);
+
+        var reds = teams.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(Team.RED))
+                .map(Map.Entry::getKey)
+                .toList();
+        var blues = memberIds.stream()
+                .filter(id -> !reds.contains(id))
+                .toList();
+
+        assert reds.size() == 2 && blues.size() == 2;
+
+        players[0] = new Player(members.get(reds.get(0)), Team.RED);
+        players[1] = new Player(members.get(blues.get(0)), Team.BLUE);
+        players[2] = new Player(members.get(reds.get(1)), Team.RED);
+        players[3] = new Player(members.get(blues.get(1)), Team.BLUE);
     }
 }
