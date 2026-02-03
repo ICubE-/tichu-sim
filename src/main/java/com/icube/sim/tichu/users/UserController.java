@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.users;
 
-import com.icube.sim.tichu.ErrorDto;
+import com.icube.sim.tichu.common.ErrorDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
