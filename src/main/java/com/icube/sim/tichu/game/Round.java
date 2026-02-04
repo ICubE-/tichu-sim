@@ -56,6 +56,19 @@ public class Round {
         game.enqueueMessage(GameMessage.largeTichu(tichuDeclarations));
 
         if (Arrays.stream(tichuDeclarations).allMatch(Objects::nonNull)) {
+            doSecondDraw();
         }
+    }
+
+    private void doSecondDraw() {
+        for (var i = 0; i < 4; i++) {
+            var player = game.getPlayer(i);
+            player.addSecondDraws(deck.subList(32 + i * 6, 32 + (i + 1) * 6));
+            assert player.getHand().size() == 14;
+
+            game.enqueueMessage(GameMessage.addSecondDraws(player.getId(), player.getHand()));
+        }
+
+        status = RoundStatus.EXCHANGING;
     }
 }

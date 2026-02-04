@@ -41,4 +41,9 @@ public class GameMessage {
     public static GameMessage largeTichu(TichuDeclaration[] tichuDeclarations) {
         return new GameMessage(GameMessageType.LARGE_TICHU, null, tichuDeclarations.clone());
     }
+
+    public static GameMessage addSecondDraws(Long targetUserId, List<Card> secondDraws) {
+        var cardMapper = new CardMapper();
+        return new GameMessage(GameMessageType.ADD_SECOND_DRAWS, targetUserId, cardMapper.toDtos(secondDraws));
+    }
 }

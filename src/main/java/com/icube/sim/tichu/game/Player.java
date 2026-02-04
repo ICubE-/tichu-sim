@@ -31,4 +31,9 @@ public class Player {
         assert cards.size() == 8;
         hand = new ArrayList<>(cards);
     }
+
+    public void addSecondDraws(List<Card> cards) {
+        assert cards.size() == 6;
+        hand.addAll(cards);
+    }
 }
