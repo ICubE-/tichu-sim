@@ -1,17 +1,17 @@
 package com.icube.sim.tichu.game;
 
+import com.icube.sim.tichu.game.dtos.GameMessage;
 import com.icube.sim.tichu.rooms.Member;
-import lombok.Getter;
+import lombok.Synchronized;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 public class Game {
     private GameStatus status;
     private final GameRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;
+    private final Queue<GameMessage> messages;
     // Score order: { RED, BLUE }
     private final int[] scores;
 
@@ -22,6 +22,9 @@ public class Game {
         this.rule = rule;
         this.players = new Player[4];
         setPlayers(members);
+
+        this.messages = new LinkedList<>();
+
         this.scores = new int[2];
     }
 
@@ -52,5 +55,15 @@ public class Game {
         players[1] = new Player(members.get(blues.get(0)), Team.BLUE);
         players[2] = new Player(members.get(reds.get(1)), Team.RED);
         players[3] = new Player(members.get(blues.get(1)), Team.BLUE);
+    }
+
+    @Synchronized("messages")
+    public void enqueueMessage(GameMessage message) {
+        messages.add(message);
+    }
+
+    @Synchronized("messages")
+    public GameMessage dequeueMessage() {
+        return messages.poll();
     }
 }
