@@ -24,6 +24,7 @@ public class Game {
         setPlayers(members);
 
         this.messages = new LinkedList<>();
+        enqueueMessage(GameMessage.start(players));
 
         this.scores = new int[2];
     }

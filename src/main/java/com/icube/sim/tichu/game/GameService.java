@@ -25,6 +25,14 @@ public class GameService {
         publishMessage(GameMessage.setRule(rule), room);
     }
 
+    public void start(String roomId) {
+        var room = roomRepository.findById(roomId).orElseThrow();
+        room.startGame();
+
+        var game = room.getGame();
+        publishMessages(game, room);
+    }
+
     private void publishMessages(Game game, Room room) {
         var message = game.dequeueMessage();
         while (message != null) {
