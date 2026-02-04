@@ -7,10 +7,12 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter
 public class Player {
+    @Getter
     private final Long id;
+    @Getter
     private final String name;
+    @Getter
     private final Team team;
 
     @Setter
@@ -23,4 +25,7 @@ public class Player {
         this.hand = null;
     }
 
+    public List<Card> getHand() {
+        return List.copyOf(hand);
+    }
 }

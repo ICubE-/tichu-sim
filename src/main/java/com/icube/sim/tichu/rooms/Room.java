@@ -3,17 +3,20 @@ package com.icube.sim.tichu.rooms;
 import com.icube.sim.tichu.game.Game;
 import com.icube.sim.tichu.game.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.game.GameRule;
+import com.icube.sim.tichu.game.exceptions.GameNotFoundException;
 import lombok.Getter;
 import lombok.Locked;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
 public class Room {
+    @Getter
     private final String id;
+    @Getter
     private final String name;
     private final Map<Long, Member> members;
+    @Getter
     private final GameRule gameRule;
     private Game game;
 
@@ -23,6 +26,11 @@ public class Room {
         this.members = new HashMap<>();
         this.gameRule = new GameRule();
         this.game = null;
+    }
+
+    @Locked.Read
+    public Map<Long, Member> getMembers() {
+        return Map.copyOf(members);
     }
 
     @Locked.Write
@@ -77,5 +85,14 @@ public class Room {
 
         gameRule.setMutable(false);
         game = new Game(gameRule, members);
+    }
+
+    @Locked.Read
+    public Game getGame() {
+        if (game == null) {
+            throw new GameNotFoundException();
+        }
+
+        return game;
     }
 }

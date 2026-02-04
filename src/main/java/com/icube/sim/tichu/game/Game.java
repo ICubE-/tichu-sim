@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
-@Getter
 public class Game {
     private GameStatus status;
     private final GameRule rule;
@@ -28,6 +27,10 @@ public class Game {
 
     public boolean isPlaying() {
         return status.equals(GameStatus.PLAYING);
+    }
+
+    public Player getPlayer(int index) {
+        return players[index];
     }
 
     private void setPlayers(Map<Long, Member> members) {
