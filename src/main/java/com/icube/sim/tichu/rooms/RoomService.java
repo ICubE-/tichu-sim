@@ -1,6 +1,7 @@
 package com.icube.sim.tichu.rooms;
 
 import com.icube.sim.tichu.auth.AuthService;
+import lombok.Locked;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,11 +23,13 @@ public class RoomService {
     private final RoomMapper roomMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public synchronized List<RoomOpaqueDto> getRooms() {
+    @Locked.Read
+    public List<RoomOpaqueDto> getRooms() {
         return roomRepository.findAll().stream().map(roomMapper::toOpaqueDto).toList();
     }
 
-    public synchronized CreateRoomResponse createRoom(CreateRoomRequest request) {
+    @Locked.Write
+    public CreateRoomResponse createRoom(CreateRoomRequest request) {
         var user = authService.getCurrentUser();
         if (memberRepository.existsById(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
@@ -46,13 +49,15 @@ public class RoomService {
         return new CreateRoomResponse(id);
     }
 
-    public synchronized Optional<RoomDto> getMyRoom() {
+    @Locked.Read
+    public Optional<RoomDto> getMyRoom() {
         var user = authService.getCurrentUser();
         var myRoom = memberRepository.findById(user.getId()).map(Member::getRoom);
         return myRoom.map(roomMapper::toDto);
     }
 
-    public synchronized RoomDto getRoom(String id) {
+    @Locked.Read
+    public RoomDto getRoom(String id) {
         var user = authService.getCurrentUser();
         var room = roomRepository.findById(id).orElseThrow(RoomNotFoundException::new);
         if (!room.containsMember(user.getId())) {
@@ -62,7 +67,8 @@ public class RoomService {
         return roomMapper.toDto(room);
     }
 
-    public synchronized void enterRoom(String id) {
+    @Locked.Write
+    public void enterRoom(String id) {
         var user = authService.getCurrentUser();
         if (memberRepository.existsById(user.getId())) {
             throw new MemberAlreadyInOneRoomException();
@@ -76,7 +82,8 @@ public class RoomService {
         notifyEnter(id, user.getId(), user.getName());
     }
 
-    public synchronized void leaveRoom(String id) {
+    @Locked.Write
+    public void leaveRoom(String id) {
         var user = authService.getCurrentUser();
         var member = memberRepository.findById(user.getId()).orElse(null);
         if (member == null || member.getRoom() == null || !member.getRoom().getId().equals(id)) {

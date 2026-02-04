@@ -4,6 +4,7 @@ import com.icube.sim.tichu.game.Game;
 import com.icube.sim.tichu.game.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.game.GameRule;
 import lombok.Getter;
+import lombok.Locked;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +25,8 @@ public class Room {
         this.game = null;
     }
 
-    public synchronized void addMember(Member member) {
+    @Locked.Write
+    public void addMember(Member member) {
         assert !members.containsKey(member.getId());
         if (members.size() == 4) {
             throw new TooManyMembersException();
@@ -37,7 +39,8 @@ public class Room {
         member.setRoom(this);
     }
 
-    public synchronized void removeMember(Long memberId) {
+    @Locked.Write
+    public void removeMember(Long memberId) {
         if (hasGameStarted()) {
             throw new GameHasAlreadyStartedException();
         }
@@ -48,19 +51,23 @@ public class Room {
         }
     }
 
-    public synchronized boolean containsMember(Long memberId) {
+    @Locked.Read
+    public boolean containsMember(Long memberId) {
         return members.containsKey(memberId);
     }
 
-    public synchronized void setGameRule(GameRule gameRule) {
-        this.gameRule.set(gameRule);
+    @Locked.Write
+    public void setGameRule(GameRule gameRule) {
+        gameRule.set(gameRule);
     }
 
-    public synchronized boolean hasGameStarted() {
+    @Locked.Read
+    public boolean hasGameStarted() {
         return game != null && game.isPlaying();
     }
 
-    public synchronized void startGame() {
+    @Locked.Write
+    public void startGame() {
         if (members.size() != 4) {
             throw new InvalidMemberCountException();
         }
