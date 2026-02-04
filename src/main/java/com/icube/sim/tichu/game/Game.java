@@ -14,6 +14,7 @@ public class Game {
     private final Queue<GameMessage> messages;
     // Score order: { RED, BLUE }
     private final int[] scores;
+    private final List<Round> rounds;
 
     public Game(GameRule rule, Map<Long, Member> members) {
         assert !rule.isMutable();
@@ -27,6 +28,8 @@ public class Game {
         enqueueMessage(GameMessage.start(players));
 
         this.scores = new int[2];
+        this.rounds = new ArrayList<>();
+        this.rounds.add(new Round(this));
     }
 
     public boolean isPlaying() {
@@ -66,5 +69,9 @@ public class Game {
     @Synchronized("messages")
     public GameMessage dequeueMessage() {
         return messages.poll();
+    }
+
+    public Round getCurrentRound() {
+        return rounds.get(rounds.size() - 1);
     }
 }
