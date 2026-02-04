@@ -1,6 +1,7 @@
 package com.icube.sim.tichu.game;
 
 import com.icube.sim.tichu.game.dtos.GameMessage;
+import com.icube.sim.tichu.game.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.rooms.Room;
 import com.icube.sim.tichu.rooms.RoomRepository;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,17 @@ import org.springframework.stereotype.Service;
 public class GameService {
     private final RoomRepository roomRepository;
     private final SimpMessagingTemplate messagingTemplate;
+
+    public void setRule(String roomId, GameRule rule) {
+        if (rule.getTeamAssignment().size() > 4) {
+            throw new InvalidTeamAssignmentException();
+        }
+
+        var room = roomRepository.findById(roomId).orElseThrow();
+        room.setGameRule(rule);
+
+        publishMessage(GameMessage.setRule(rule), room);
+    }
 
     private void publishMessages(Game game, Room room) {
         var message = game.dequeueMessage();
