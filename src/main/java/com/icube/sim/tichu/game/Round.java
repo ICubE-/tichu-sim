@@ -71,4 +71,19 @@ public class Round {
 
         status = RoundStatus.EXCHANGING;
     }
+
+    public void smallTichu(Long playerId) {
+        if (status == RoundStatus.WAITING_LARGE_TICHU || status == RoundStatus.FINISHED) {
+            throw new InvalidTimeOfActionException();
+        }
+
+        var playerIndex = game.getPlayerIndexById(playerId);
+        var player = game.getPlayer(playerIndex);
+        if (player.getHand().size() != 14 || tichuDeclarations[playerIndex] != TichuDeclaration.NONE) {
+            throw new InvalidTichuDeclarationException();
+        }
+
+        tichuDeclarations[playerIndex] = TichuDeclaration.SMALL;
+        game.enqueueMessage(GameMessage.smallTichu(player));
+    }
 }

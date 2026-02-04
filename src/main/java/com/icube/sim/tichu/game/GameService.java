@@ -46,6 +46,16 @@ public class GameService {
         publishMessages(game, room);
     }
 
+    public void smallTichu(String roomId, Principal principal) {
+        var room = roomRepository.findById(roomId).orElseThrow();
+        var game = room.getGame();
+
+        var round = game.getCurrentRound();
+        round.smallTichu(Long.valueOf(principal.getName()));
+
+        publishMessages(game, room);
+    }
+
     private void publishMessages(Game game, Room room) {
         var message = game.dequeueMessage();
         while (message != null) {

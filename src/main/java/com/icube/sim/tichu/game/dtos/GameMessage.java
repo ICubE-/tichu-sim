@@ -46,4 +46,8 @@ public class GameMessage {
         var cardMapper = new CardMapper();
         return new GameMessage(GameMessageType.ADD_SECOND_DRAWS, targetUserId, cardMapper.toDtos(secondDraws));
     }
+
+    public static GameMessage smallTichu(Player player) {
+        return new GameMessage(GameMessageType.SMALL_TICHU, null, player.getId());
+    }
 }
