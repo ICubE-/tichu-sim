@@ -2,10 +2,13 @@ package com.icube.sim.tichu.game.dtos;
 
 import com.icube.sim.tichu.game.GameRule;
 import com.icube.sim.tichu.game.Player;
+import com.icube.sim.tichu.game.cards.Card;
+import com.icube.sim.tichu.game.mappers.CardMapper;
 import com.icube.sim.tichu.game.mappers.PlayerMapper;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Getter
 public class GameMessage {
@@ -27,5 +30,10 @@ public class GameMessage {
         var playerMapper = new PlayerMapper();
         var playerDtos = Arrays.stream(players).map(playerMapper::toDto).toArray(PlayerDto[]::new);
         return new GameMessage(GameMessageType.START, null, playerDtos);
+    }
+
+    public static GameMessage initFirstDraws(Long targetUserId, List<Card> firstDraws) {
+        var cardMapper = new CardMapper();
+        return new GameMessage(GameMessageType.INIT_FIRST_DRAWS, targetUserId, cardMapper.toDtos(firstDraws));
     }
 }
