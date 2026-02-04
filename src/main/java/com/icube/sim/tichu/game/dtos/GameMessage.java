@@ -2,6 +2,7 @@ package com.icube.sim.tichu.game.dtos;
 
 import com.icube.sim.tichu.game.GameRule;
 import com.icube.sim.tichu.game.Player;
+import com.icube.sim.tichu.game.TichuDeclaration;
 import com.icube.sim.tichu.game.cards.Card;
 import com.icube.sim.tichu.game.mappers.CardMapper;
 import com.icube.sim.tichu.game.mappers.PlayerMapper;
@@ -35,5 +36,9 @@ public class GameMessage {
     public static GameMessage initFirstDraws(Long targetUserId, List<Card> firstDraws) {
         var cardMapper = new CardMapper();
         return new GameMessage(GameMessageType.INIT_FIRST_DRAWS, targetUserId, cardMapper.toDtos(firstDraws));
+    }
+
+    public static GameMessage largeTichu(TichuDeclaration[] tichuDeclarations) {
+        return new GameMessage(GameMessageType.LARGE_TICHU, null, tichuDeclarations.clone());
     }
 }

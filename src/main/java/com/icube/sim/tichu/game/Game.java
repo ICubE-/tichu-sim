@@ -11,6 +11,7 @@ public class Game {
     private final GameRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;
+    private final Map<Long, Integer> playerIndexById;
     private final Queue<GameMessage> messages;
     // Score order: { RED, BLUE }
     private final int[] scores;
@@ -22,6 +23,7 @@ public class Game {
         this.status = GameStatus.PLAYING;
         this.rule = rule;
         this.players = new Player[4];
+        this.playerIndexById = new HashMap<>();
         setPlayers(members);
 
         this.messages = new LinkedList<>();
@@ -38,6 +40,10 @@ public class Game {
 
     public Player getPlayer(int index) {
         return players[index];
+    }
+
+    public int getPlayerIndexById(Long id) {
+        return playerIndexById.get(id);
     }
 
     private void setPlayers(Map<Long, Member> members) {
@@ -59,6 +65,11 @@ public class Game {
         players[1] = new Player(members.get(blues.get(0)), Team.BLUE);
         players[2] = new Player(members.get(reds.get(1)), Team.RED);
         players[3] = new Player(members.get(blues.get(1)), Team.BLUE);
+
+        playerIndexById.put(players[0].getId(), 0);
+        playerIndexById.put(players[1].getId(), 1);
+        playerIndexById.put(players[2].getId(), 2);
+        playerIndexById.put(players[3].getId(), 3);
     }
 
     @Synchronized("messages")

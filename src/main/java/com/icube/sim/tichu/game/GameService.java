@@ -1,12 +1,15 @@
 package com.icube.sim.tichu.game;
 
 import com.icube.sim.tichu.game.dtos.GameMessage;
+import com.icube.sim.tichu.game.dtos.LargeTichuSend;
 import com.icube.sim.tichu.game.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.rooms.Room;
 import com.icube.sim.tichu.rooms.RoomRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.security.Principal;
 
 @AllArgsConstructor
 @Service
@@ -30,6 +33,16 @@ public class GameService {
         room.startGame();
 
         var game = room.getGame();
+        publishMessages(game, room);
+    }
+
+    public void largeTichu(String roomId, LargeTichuSend largeTichuSend, Principal principal) {
+        var room = roomRepository.findById(roomId).orElseThrow();
+        var game = room.getGame();
+
+        var round = game.getCurrentRound();
+        round.largeTichu(Long.valueOf(principal.getName()), largeTichuSend);
+
         publishMessages(game, room);
     }
 
