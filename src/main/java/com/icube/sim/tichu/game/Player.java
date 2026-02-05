@@ -27,6 +27,10 @@ public class Player {
         return List.copyOf(hand);
     }
 
+    public boolean hasCard(Card card) {
+        return hand.contains(card);
+    }
+
     public void initFirstDraws(List<Card> cards) {
         assert cards.size() == 8;
         hand = new ArrayList<>(cards);
@@ -35,5 +39,10 @@ public class Player {
     public void addSecondDraws(List<Card> cards) {
         assert cards.size() == 6;
         hand.addAll(cards);
+    }
+
+    public void exchange(List<Card> cardsGave, List<Card> cardsReceived) {
+        hand.removeAll(cardsGave);
+        hand.addAll(cardsReceived);
     }
 }

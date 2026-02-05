@@ -1,5 +1,6 @@
 package com.icube.sim.tichu.game;
 
+import com.icube.sim.tichu.game.dtos.ExchangeSend;
 import com.icube.sim.tichu.game.dtos.GameMessage;
 import com.icube.sim.tichu.game.dtos.LargeTichuSend;
 import com.icube.sim.tichu.game.exceptions.InvalidTeamAssignmentException;
@@ -52,6 +53,16 @@ public class GameService {
 
         var round = game.getCurrentRound();
         round.smallTichu(Long.valueOf(principal.getName()));
+
+        publishMessages(game, room);
+    }
+
+    public void exchange(String roomId, ExchangeSend exchangeSend, Principal principal) {
+        var room = roomRepository.findById(roomId).orElseThrow();
+        var game = room.getGame();
+
+        var exchangePhase = game.getCurrentRound().getExchangePhase();
+        exchangePhase.queueExchange(Long.valueOf(principal.getName()), exchangeSend);
 
         publishMessages(game, room);
     }

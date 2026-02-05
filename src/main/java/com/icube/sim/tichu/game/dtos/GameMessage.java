@@ -50,4 +50,8 @@ public class GameMessage {
     public static GameMessage smallTichu(Player player) {
         return new GameMessage(GameMessageType.SMALL_TICHU, null, player.getId());
     }
+
+    public static GameMessage exchange(Long targetUserId, ExchangeMessage exchangeMessage) {
+        return new GameMessage(GameMessageType.EXCHANGE, targetUserId, exchangeMessage);
+    }
 }

@@ -33,6 +33,10 @@ public class CardMapper {
         };
     }
 
+    public Card toCardNullable(CardDto cardDto) {
+        return cardDto == null ? null : toCard(cardDto);
+    }
+
     public List<CardDto> toDtos(List<Card> cards) {
         return cards.stream().map(this::toDto).toList();
     }

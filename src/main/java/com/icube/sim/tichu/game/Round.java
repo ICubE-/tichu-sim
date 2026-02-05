@@ -86,4 +86,21 @@ public class Round {
         tichuDeclarations[playerIndex] = TichuDeclaration.SMALL;
         game.enqueueMessage(GameMessage.smallTichu(player));
     }
+
+    public ExchangePhase getExchangePhase() {
+        if (status != RoundStatus.EXCHANGING) {
+            throw new InvalidTimeOfActionException();
+        }
+
+        return exchangePhase;
+    }
+
+    public void finishExchangePhase() {
+        assert status == RoundStatus.EXCHANGING;
+        status = RoundStatus.PLAYING;
+        nextPhase();
+    }
+
+    public void nextPhase() {
+    }
 }
