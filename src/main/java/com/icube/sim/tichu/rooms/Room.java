@@ -1,9 +1,8 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.games.tichu.TichuGame;
-import com.icube.sim.tichu.games.tichu.exceptions.GameHasAlreadyStartedException;
-import com.icube.sim.tichu.games.tichu.TichuGameRule;
-import com.icube.sim.tichu.games.tichu.exceptions.GameNotFoundException;
+import com.icube.sim.tichu.games.common.*;
+import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
+import com.icube.sim.tichu.games.common.exceptions.GameNotFoundException;
 import lombok.Getter;
 import lombok.Locked;
 

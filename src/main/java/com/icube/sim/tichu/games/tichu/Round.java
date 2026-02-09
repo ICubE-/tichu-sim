@@ -4,7 +4,7 @@ import com.icube.sim.tichu.games.tichu.cards.Card;
 import com.icube.sim.tichu.games.tichu.dtos.GameMessage;
 import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
-import com.icube.sim.tichu.games.tichu.exceptions.InvalidTimeOfActionException;
+import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
 
 import java.util.*;
 

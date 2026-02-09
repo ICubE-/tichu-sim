@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.games.tichu;
 
-import com.icube.sim.tichu.games.tichu.exceptions.ImmutableGameRuleException;
+import com.icube.sim.tichu.games.common.ImmutableGameRuleException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import lombok.Data;
 

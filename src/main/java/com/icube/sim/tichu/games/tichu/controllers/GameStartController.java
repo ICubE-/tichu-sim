@@ -1,7 +1,7 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
-import com.icube.sim.tichu.games.tichu.exceptions.GameHasAlreadyStartedException;
+import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.rooms.InvalidMemberCountException;
