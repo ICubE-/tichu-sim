@@ -66,7 +66,7 @@ public class Room {
 
     @Locked.Write
     public void setGameRule(GameRule gameRule) {
-        gameRule.set(gameRule);
+        this.gameRule.set(gameRule);
     }
 
     @Locked.Read
