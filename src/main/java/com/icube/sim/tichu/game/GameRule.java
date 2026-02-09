@@ -1,5 +1,7 @@
 package com.icube.sim.tichu.game;
 
+import com.icube.sim.tichu.game.exceptions.ImmutableGameRuleException;
+import com.icube.sim.tichu.game.exceptions.InvalidTeamAssignmentException;
 import lombok.Data;
 
 import java.util.Collections;

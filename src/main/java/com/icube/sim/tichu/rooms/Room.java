@@ -1,18 +1,22 @@
 package com.icube.sim.tichu.rooms;
 
 import com.icube.sim.tichu.game.Game;
-import com.icube.sim.tichu.game.GameHasAlreadyStartedException;
+import com.icube.sim.tichu.game.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.game.GameRule;
+import com.icube.sim.tichu.game.exceptions.GameNotFoundException;
 import lombok.Getter;
+import lombok.Locked;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
 public class Room {
+    @Getter
     private final String id;
+    @Getter
     private final String name;
     private final Map<Long, Member> members;
+    @Getter
     private final GameRule gameRule;
     private Game game;
 
@@ -24,7 +28,13 @@ public class Room {
         this.game = null;
     }
 
-    public synchronized void addMember(Member member) {
+    @Locked.Read
+    public Map<Long, Member> getMembers() {
+        return Map.copyOf(members);
+    }
+
+    @Locked.Write
+    public void addMember(Member member) {
         assert !members.containsKey(member.getId());
         if (members.size() == 4) {
             throw new TooManyMembersException();
@@ -37,7 +47,8 @@ public class Room {
         member.setRoom(this);
     }
 
-    public synchronized void removeMember(Long memberId) {
+    @Locked.Write
+    public void removeMember(Long memberId) {
         if (hasGameStarted()) {
             throw new GameHasAlreadyStartedException();
         }
@@ -48,19 +59,23 @@ public class Room {
         }
     }
 
-    public synchronized boolean containsMember(Long memberId) {
+    @Locked.Read
+    public boolean containsMember(Long memberId) {
         return members.containsKey(memberId);
     }
 
-    public synchronized void setGameRule(GameRule gameRule) {
-        this.gameRule.set(gameRule);
+    @Locked.Write
+    public void setGameRule(GameRule gameRule) {
+        gameRule.set(gameRule);
     }
 
-    public synchronized boolean hasGameStarted() {
+    @Locked.Read
+    public boolean hasGameStarted() {
         return game != null && game.isPlaying();
     }
 
-    public synchronized void startGame() {
+    @Locked.Write
+    public void startGame() {
         if (members.size() != 4) {
             throw new InvalidMemberCountException();
         }
@@ -70,5 +85,14 @@ public class Room {
 
         gameRule.setMutable(false);
         game = new Game(gameRule, members);
+    }
+
+    @Locked.Read
+    public Game getGame() {
+        if (game == null) {
+            throw new GameNotFoundException();
+        }
+
+        return game;
     }
 }
