@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.game.GameRule;
+import com.icube.sim.tichu.games.tichu.GameRule;
 import lombok.Data;
 
 import java.util.List;
