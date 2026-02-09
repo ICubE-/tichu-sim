@@ -2,7 +2,7 @@ package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
 import com.icube.sim.tichu.games.tichu.exceptions.GameHasAlreadyStartedException;
-import com.icube.sim.tichu.games.tichu.GameService;
+import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.rooms.InvalidMemberCountException;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller;
 @AllArgsConstructor
 @Controller
 public class GameStartController {
-    private final GameService gameService;
+    private final TichuService gameService;
 
     @MessageMapping("/rooms/{roomId}/game/start")
     public void start(@DestinationVariable("roomId") String roomId) {

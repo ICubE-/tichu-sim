@@ -14,11 +14,11 @@ import java.security.Principal;
 
 @AllArgsConstructor
 @Service
-public class GameService {
+public class TichuService {
     private final RoomRepository roomRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void setRule(String roomId, GameRule rule) {
+    public void setRule(String roomId, TichuGameRule rule) {
         if (rule.getTeamAssignment().size() > 4) {
             throw new InvalidTeamAssignmentException();
         }
@@ -67,7 +67,7 @@ public class GameService {
         publishMessages(game, room);
     }
 
-    private void publishMessages(Game game, Room room) {
+    private void publishMessages(TichuGame game, Room room) {
         var message = game.dequeueMessage();
         while (message != null) {
             publishMessage(message, room);

@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.games.tichu;
 
-public enum GameStatus {
+public enum TichuGameStatus {
     PLAYING,
     FINISHED
 }

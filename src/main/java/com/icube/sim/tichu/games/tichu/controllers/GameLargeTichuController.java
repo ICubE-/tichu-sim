@@ -1,7 +1,7 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
-import com.icube.sim.tichu.games.tichu.GameService;
+import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
 import com.icube.sim.tichu.games.tichu.exceptions.GameNotFoundException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
@@ -16,7 +16,7 @@ import java.security.Principal;
 @AllArgsConstructor
 @Controller
 public class GameLargeTichuController {
-    private final GameService gameService;
+    private final TichuService gameService;
 
     @MessageMapping("/rooms/{roomId}/game/large-tichu")
     public void largeTichu(

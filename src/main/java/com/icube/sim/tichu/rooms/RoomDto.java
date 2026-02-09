@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.games.tichu.GameRule;
+import com.icube.sim.tichu.games.tichu.TichuGameRule;
 import lombok.Data;
 
 import java.util.List;
@@ -11,5 +11,5 @@ public class RoomDto {
     private String name;
     private List<MemberDto> members;
     private boolean hasGameStarted;
-    private GameRule gameRule;
+    private TichuGameRule gameRule;
 }

@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.games.tichu.dtos;
 
-import com.icube.sim.tichu.games.tichu.GameRule;
+import com.icube.sim.tichu.games.tichu.TichuGameRule;
 import com.icube.sim.tichu.games.tichu.Player;
 import com.icube.sim.tichu.games.tichu.TichuDeclaration;
 import com.icube.sim.tichu.games.tichu.cards.Card;
@@ -23,7 +23,7 @@ public class GameMessage {
         this.data = data;
     }
 
-    public static GameMessage setRule(GameRule rule) {
+    public static GameMessage setRule(TichuGameRule rule) {
         return new GameMessage(GameMessageType.SET_RULE, null, rule);
     }
 

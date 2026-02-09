@@ -1,8 +1,8 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.games.tichu.Game;
+import com.icube.sim.tichu.games.tichu.TichuGame;
 import com.icube.sim.tichu.games.tichu.exceptions.GameHasAlreadyStartedException;
-import com.icube.sim.tichu.games.tichu.GameRule;
+import com.icube.sim.tichu.games.tichu.TichuGameRule;
 import com.icube.sim.tichu.games.tichu.exceptions.GameNotFoundException;
 import lombok.Getter;
 import lombok.Locked;
@@ -17,14 +17,14 @@ public class Room {
     private final String name;
     private final Map<Long, Member> members;
     @Getter
-    private final GameRule gameRule;
-    private Game game;
+    private final TichuGameRule gameRule;
+    private TichuGame game;
 
     public Room(String id, String name) {
         this.id = id;
         this.name = name;
         this.members = new HashMap<>();
-        this.gameRule = new GameRule();
+        this.gameRule = new TichuGameRule();
         this.game = null;
     }
 
@@ -65,7 +65,7 @@ public class Room {
     }
 
     @Locked.Write
-    public void setGameRule(GameRule gameRule) {
+    public void setGameRule(TichuGameRule gameRule) {
         this.gameRule.set(gameRule);
     }
 
@@ -84,11 +84,11 @@ public class Room {
         }
 
         gameRule.setMutable(false);
-        game = new Game(gameRule, members);
+        game = new TichuGame(gameRule, members);
     }
 
     @Locked.Read
-    public Game getGame() {
+    public TichuGame getGame() {
         if (game == null) {
             throw new GameNotFoundException();
         }

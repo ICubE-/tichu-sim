@@ -1,7 +1,7 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
-import com.icube.sim.tichu.games.tichu.GameService;
+import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.tichu.dtos.ExchangeSend;
 import com.icube.sim.tichu.games.tichu.exceptions.GameNotFoundException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidExchangeException;
@@ -19,7 +19,7 @@ import java.security.Principal;
 @AllArgsConstructor
 @Controller
 public class GameExchangeController {
-    private final GameService gameService;
+    private final TichuService gameService;
 
     @MessageMapping("/rooms/{roomId}/game/exchange")
     public void exchange(

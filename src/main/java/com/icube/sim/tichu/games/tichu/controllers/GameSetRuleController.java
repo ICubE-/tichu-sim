@@ -1,8 +1,8 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
-import com.icube.sim.tichu.games.tichu.GameRule;
-import com.icube.sim.tichu.games.tichu.GameService;
+import com.icube.sim.tichu.games.tichu.TichuGameRule;
+import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.tichu.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.games.tichu.exceptions.ImmutableGameRuleException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Controller;
 @AllArgsConstructor
 @Controller
 public class GameSetRuleController {
-    private final GameService gameService;
+    private final TichuService gameService;
 
     @MessageMapping("/rooms/{roomId}/game/set-rule")
-    public void setRule(@DestinationVariable("roomId") String roomId, @Payload GameRule rule) {
+    public void setRule(@DestinationVariable("roomId") String roomId, @Payload TichuGameRule rule) {
         gameService.setRule(roomId, rule);
     }
 

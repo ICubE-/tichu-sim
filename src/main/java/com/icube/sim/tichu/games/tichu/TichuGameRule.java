@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class GameRule {
+public class TichuGameRule {
     private boolean isMutable = true;
     private Map<Long, Team> teamAssignment = new HashMap<>();
     private int timeLimit = 30;
 
-    public void set(GameRule other) {
+    public void set(TichuGameRule other) {
         if (!this.isMutable) {
             throw new ImmutableGameRuleException();
         }
