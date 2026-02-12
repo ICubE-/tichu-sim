@@ -3,6 +3,7 @@ package com.icube.sim.tichu.games.tichu;
 import com.icube.sim.tichu.games.common.domain.AbstractGame;
 import com.icube.sim.tichu.games.tichu.events.TichuStartEvent;
 import com.icube.sim.tichu.rooms.Member;
+import lombok.Locked;
 
 import java.util.*;
 
@@ -66,6 +67,7 @@ public class Tichu extends AbstractGame {
         return players;
     }
 
+    @Locked
     public Round getCurrentRound() {
         return rounds.get(rounds.size() - 1);
     }
