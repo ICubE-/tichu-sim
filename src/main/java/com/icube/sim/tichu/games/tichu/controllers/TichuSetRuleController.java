@@ -1,6 +1,7 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
+import com.icube.sim.tichu.games.common.exceptions.InvalidGameRuleException;
 import com.icube.sim.tichu.games.tichu.TichuRule;
 import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
@@ -37,5 +38,11 @@ public class TichuSetRuleController {
     @SendToUser("/queue/errors")
     public ErrorMessage handleInvalidTeamAssignment() {
         return new ErrorMessage("Team assignment is invalid.");
+    }
+
+    @MessageExceptionHandler(InvalidGameRuleException.class)
+    @SendToUser("/queue/errors")
+    public ErrorMessage handleInvalidGameRule() {
+        return new ErrorMessage("Game rule is invalid.");
     }
 }
