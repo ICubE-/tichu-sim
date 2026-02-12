@@ -6,7 +6,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class ExchangeMessage {
-    private CardDto left;
-    private CardDto mid;
-    private CardDto right;
+    private CardDto gaveToLeft;
+    private CardDto gaveToMid;
+    private CardDto gaveToRight;
+    private CardDto receivedFromLeft;
+    private CardDto receivedFromMid;
+    private CardDto receivedFromRight;
 }
