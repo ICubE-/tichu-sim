@@ -1,6 +1,7 @@
 package com.icube.sim.tichu.games.tichu;
 
-import com.icube.sim.tichu.games.common.ImmutableGameRuleException;
+import com.icube.sim.tichu.games.common.domain.GameName;
+import com.icube.sim.tichu.games.common.domain.GameRule;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import lombok.Data;
 
@@ -10,18 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class TichuRule {
-    private boolean isMutable = true;
-    private Map<Long, Team> teamAssignment = new HashMap<>();
-    private int timeLimit = 30;
+public class TichuRule implements GameRule {
+    private final Map<Long, Team> teamAssignment = new HashMap<>();
+    private final int timeLimit = 30;
 
-    public void set(TichuRule other) {
-        if (!this.isMutable) {
-            throw new ImmutableGameRuleException();
-        }
-
-        this.teamAssignment = other.teamAssignment;
-        this.timeLimit = other.timeLimit;
+    @Override
+    public GameName getGameName() {
+        return GameName.TICHU;
     }
 
     public Map<Long, Team> getDeterminedTeams(List<Long> userIds) {

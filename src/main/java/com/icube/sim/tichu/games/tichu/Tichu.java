@@ -1,41 +1,37 @@
 package com.icube.sim.tichu.games.tichu;
 
-import com.icube.sim.tichu.games.tichu.dtos.GameMessage;
+import com.icube.sim.tichu.games.common.domain.AbstractGame;
+import com.icube.sim.tichu.games.tichu.events.TichuStartEvent;
 import com.icube.sim.tichu.rooms.Member;
-import lombok.Synchronized;
 
 import java.util.*;
 
-public class Tichu {
-    private TichuStatus status;
+public class Tichu extends AbstractGame {
     private final TichuRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;
     private final Map<Long, Integer> playerIndexById;
-    private final Queue<GameMessage> messages;
     // Score order: { RED, BLUE }
     private final int[] scores;
     private final List<Round> rounds;
 
     public Tichu(TichuRule rule, Map<Long, Member> members) {
-        assert !rule.isMutable();
+        this(rule, initPlayers(rule, members));
+    }
 
-        this.status = TichuStatus.PLAYING;
+    private Tichu(TichuRule rule, Player[] players) {
+        super(new TichuStartEvent(players));
         this.rule = rule;
-        this.players = new Player[4];
-        this.playerIndexById = new HashMap<>();
-        setPlayers(members);
-
-        this.messages = new LinkedList<>();
-        enqueueMessage(GameMessage.start(players));
-
+        this.players = players;
+        this.playerIndexById = Map.of(
+                players[0].getId(), 0,
+                players[1].getId(), 1,
+                players[2].getId(), 2,
+                players[3].getId(), 3
+        );
         this.scores = new int[2];
         this.rounds = new ArrayList<>();
         this.rounds.add(new Round(this));
-    }
-
-    public boolean isPlaying() {
-        return status.equals(TichuGameStatus.PLAYING);
     }
 
     public Player getPlayer(int index) {
@@ -46,7 +42,7 @@ public class Tichu {
         return playerIndexById.get(id);
     }
 
-    private void setPlayers(Map<Long, Member> members) {
+    private static Player[] initPlayers(TichuRule rule, Map<Long, Member> members) {
         var memberIds = new ArrayList<>(members.keySet());
         Collections.shuffle(memberIds);
         var teams = rule.getDeterminedTeams(memberIds);
@@ -61,25 +57,13 @@ public class Tichu {
 
         assert reds.size() == 2 && blues.size() == 2;
 
+        Player[] players = new Player[4];
         players[0] = new Player(members.get(reds.get(0)), Team.RED);
         players[1] = new Player(members.get(blues.get(0)), Team.BLUE);
         players[2] = new Player(members.get(reds.get(1)), Team.RED);
         players[3] = new Player(members.get(blues.get(1)), Team.BLUE);
 
-        playerIndexById.put(players[0].getId(), 0);
-        playerIndexById.put(players[1].getId(), 1);
-        playerIndexById.put(players[2].getId(), 2);
-        playerIndexById.put(players[3].getId(), 3);
-    }
-
-    @Synchronized("messages")
-    public void enqueueMessage(GameMessage message) {
-        messages.add(message);
-    }
-
-    @Synchronized("messages")
-    public GameMessage dequeueMessage() {
-        return messages.poll();
+        return players;
     }
 
     public Round getCurrentRound() {
