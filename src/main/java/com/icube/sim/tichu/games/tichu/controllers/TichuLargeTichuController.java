@@ -2,15 +2,12 @@ package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
 import com.icube.sim.tichu.games.tichu.TichuService;
-import com.icube.sim.tichu.games.tichu.dtos.ExchangeSend;
+import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
 import com.icube.sim.tichu.games.common.exceptions.GameNotFoundException;
-import com.icube.sim.tichu.games.tichu.exceptions.InvalidExchangeException;
+import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
 import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
 import lombok.AllArgsConstructor;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
@@ -18,16 +15,16 @@ import java.security.Principal;
 
 @AllArgsConstructor
 @Controller
-public class GameExchangeController {
+public class TichuLargeTichuController {
     private final TichuService gameService;
 
-    @MessageMapping("/rooms/{roomId}/game/exchange")
-    public void exchange(
+    @MessageMapping("/rooms/{roomId}/game/large-tichu")
+    public void largeTichu(
             @DestinationVariable("roomId") String roomId,
-            @Payload ExchangeSend exchangeSend,
+            @Payload LargeTichuSend largeTichuSend,
             Principal principal
     ) {
-        gameService.exchange(roomId, exchangeSend, principal);
+        gameService.largeTichu(roomId, largeTichuSend, principal);
     }
 
     @MessageExceptionHandler(GameNotFoundException.class)
@@ -42,9 +39,9 @@ public class GameExchangeController {
         return new ErrorMessage("The action cannot be performed at this time.");
     }
 
-    @MessageExceptionHandler(InvalidExchangeException.class)
+    @MessageExceptionHandler(InvalidTichuDeclarationException.class)
     @SendToUser("/queue/errors")
-    public ErrorMessage handleInvalidExchange() {
-        return new ErrorMessage("Invalid exchange.");
+    public ErrorMessage handleInvalidTichuDeclaration() {
+        return new ErrorMessage("Invalid tichu declaration.");
     }
 }

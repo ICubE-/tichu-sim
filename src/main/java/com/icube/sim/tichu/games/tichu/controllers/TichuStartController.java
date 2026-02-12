@@ -12,7 +12,7 @@ import org.springframework.stereotype.Controller;
 
 @AllArgsConstructor
 @Controller
-public class GameStartController {
+public class TichuStartController {
     private final TichuService gameService;
 
     @MessageMapping("/rooms/{roomId}/game/start")

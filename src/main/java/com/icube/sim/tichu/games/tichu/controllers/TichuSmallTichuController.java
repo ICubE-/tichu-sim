@@ -14,7 +14,7 @@ import java.security.Principal;
 
 @AllArgsConstructor
 @Controller
-public class GameSmallTichuController {
+public class TichuSmallTichuController {
     private final TichuService gameService;
 
     @MessageMapping("/rooms/{roomId}/game/small-tichu")
