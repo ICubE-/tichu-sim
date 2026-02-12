@@ -27,6 +27,10 @@ public class Player {
         return List.copyOf(hand);
     }
 
+    public int getHandSize() {
+        return hand.size();
+    }
+
     public boolean hasCard(Card card) {
         return hand.contains(card);
     }
