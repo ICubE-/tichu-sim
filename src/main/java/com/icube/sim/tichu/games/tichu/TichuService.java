@@ -42,9 +42,14 @@ public class TichuService extends AbstractGameService {
     }
 
     public void largeTichu(String roomId, LargeTichuSend largeTichuSend, Principal principal) {
+        var isLargeTichuDeclared = largeTichuSend.getIsLargeTichuDeclared();
+        if (isLargeTichuDeclared == null) {
+            throw new InvalidTichuDeclarationException();
+        }
+
         var game = getGame(roomId);
         var round = game.getCurrentRound();
-        round.largeTichu(Long.valueOf(principal.getName()), largeTichuSend);
+        round.largeTichu(Long.valueOf(principal.getName()), isLargeTichuDeclared);
 
         publishQueuedEvents(game, roomId);
     }
