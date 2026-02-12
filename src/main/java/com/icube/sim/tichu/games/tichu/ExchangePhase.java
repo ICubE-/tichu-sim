@@ -1,9 +1,8 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.tichu.cards.Card;
-import com.icube.sim.tichu.games.tichu.dtos.ExchangeMessage;
 import com.icube.sim.tichu.games.tichu.dtos.ExchangeSend;
-import com.icube.sim.tichu.games.tichu.dtos.GameMessage;
+import com.icube.sim.tichu.games.tichu.events.TichuExchangeEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidExchangeException;
 import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
 
@@ -59,30 +58,21 @@ public class ExchangePhase {
 
     public boolean isExchangeFullyQueued() {
         return Arrays.stream(exchangingCards).allMatch(playerExchangeCards ->
-                        Arrays.stream(playerExchangeCards).allMatch(Objects::nonNull));
+                Arrays.stream(playerExchangeCards).allMatch(Objects::nonNull));
     }
 
     public void doExchange() {
         assert isExchangeFullyQueued();
 
+        var exchangeEvent = TichuExchangeEvent.of(game, exchangingCards);
         for (var i = 0; i < 4; i++) {
             var player = game.getPlayer(i);
-            var cardsGave = exchangingCards[i];
-
-            var cardReceivedFromRight = exchangingCards[(i + 1) % 4][2];
-            var cardReceivedFromMid = exchangingCards[(i + 2) % 4][1];
-            var cardReceivedFromLeft = exchangingCards[(i + 3) % 4][0];
-            var cardsReceived = List.of(cardReceivedFromRight, cardReceivedFromMid, cardReceivedFromLeft);
-            player.exchange(List.of(cardsGave), cardsReceived);
-
-            var cardMapper = new CardMapper();
-            var exchangeMessage = new ExchangeMessage(
-                    cardMapper.toDto(cardReceivedFromLeft),
-                    cardMapper.toDto(cardReceivedFromMid),
-                    cardMapper.toDto(cardReceivedFromRight)
-            );
-            game.enqueueMessage(GameMessage.exchange(player.getId(), exchangeMessage));
+            var cardsGave = List.of(exchangeEvent.getCardsGaveFrom(player.getId()));
+            var cardsReceived = exchangeEvent.getCardsReceived(player.getId());
+            player.exchange(cardsGave, cardsReceived);
         }
+
+        game.addEvent(exchangeEvent);
 
         round.finishExchangePhase();
     }

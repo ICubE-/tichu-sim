@@ -1,8 +1,11 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.tichu.cards.Card;
-import com.icube.sim.tichu.games.tichu.dtos.GameMessage;
 import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
+import com.icube.sim.tichu.games.tichu.events.TichuFirstDrawEvent;
+import com.icube.sim.tichu.games.tichu.events.TichuLargeTichuEvent;
+import com.icube.sim.tichu.games.tichu.events.TichuSecondDrawEvent;
+import com.icube.sim.tichu.games.tichu.events.TichuSmallTichuEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
 import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
 
@@ -18,7 +21,7 @@ public class Round {
 
     public Round(Tichu game) {
         this.game = game;
-        this.tichuDeclarations = new TichuDeclaration[] {null, null, null, null};
+        this.tichuDeclarations = new TichuDeclaration[] { null, null, null, null };
         this.exchangePhase = new ExchangePhase(game, this);
         this.phases = new ArrayList<>();
 
@@ -32,13 +35,16 @@ public class Round {
     }
 
     private void doFirstDraw() {
+        var firstDraws = new HashMap<Long, List<Card>>();
+
         for (var i = 0; i < 4; i++) {
             var player = game.getPlayer(i);
             player.initFirstDraws(deck.subList(i * 8, (i + 1) * 8));
-            assert player.getHand().size() == 8;
-
-            game.enqueueMessage(GameMessage.initFirstDraws(player.getId(), player.getHand()));
+            assert player.getHandSize() == 8;
+            firstDraws.put(player.getId(), player.getHand());
         }
+
+        game.addEvent(new TichuFirstDrawEvent(firstDraws));
     }
 
     public void largeTichu(Long playerId, LargeTichuSend largeTichuSend) {
@@ -53,7 +59,8 @@ public class Round {
         tichuDeclarations[playerIndex] = largeTichuSend.getIsLargeTichuDeclared() ?
                 TichuDeclaration.LARGE : TichuDeclaration.NONE;
 
-        game.enqueueMessage(GameMessage.largeTichu(tichuDeclarations));
+
+        game.addEvent(new TichuLargeTichuEvent(tichuDeclarations));
 
         if (Arrays.stream(tichuDeclarations).allMatch(Objects::nonNull)) {
             doSecondDraw();
@@ -61,13 +68,16 @@ public class Round {
     }
 
     private void doSecondDraw() {
+        var hands = new HashMap<Long, List<Card>>();
+
         for (var i = 0; i < 4; i++) {
             var player = game.getPlayer(i);
             player.addSecondDraws(deck.subList(32 + i * 6, 32 + (i + 1) * 6));
-            assert player.getHand().size() == 14;
-
-            game.enqueueMessage(GameMessage.addSecondDraws(player.getId(), player.getHand()));
+            assert player.getHandSize() == 14;
+            hands.put(player.getId(), player.getHand());
         }
+
+        game.addEvent(new TichuSecondDrawEvent(hands));
 
         status = RoundStatus.EXCHANGING;
     }
@@ -79,12 +89,12 @@ public class Round {
 
         var playerIndex = game.getPlayerIndexById(playerId);
         var player = game.getPlayer(playerIndex);
-        if (player.getHand().size() != 14 || tichuDeclarations[playerIndex] != TichuDeclaration.NONE) {
+        if (player.getHandSize() != 14 || tichuDeclarations[playerIndex] != TichuDeclaration.NONE) {
             throw new InvalidTichuDeclarationException();
         }
 
         tichuDeclarations[playerIndex] = TichuDeclaration.SMALL;
-        game.enqueueMessage(GameMessage.smallTichu(player));
+        game.addEvent(new TichuSmallTichuEvent(player.getId()));
     }
 
     public ExchangePhase getExchangePhase() {
