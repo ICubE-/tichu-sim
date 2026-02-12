@@ -1,10 +1,9 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.tichu.cards.Card;
-import com.icube.sim.tichu.games.tichu.dtos.ExchangeSend;
 import com.icube.sim.tichu.games.tichu.events.TichuExchangeEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidExchangeException;
-import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,13 +21,13 @@ public class ExchangePhase {
         this.exchangingCards = new Card[4][3];
     }
 
-    public void queueExchange(Long playerId, ExchangeSend exchangeSend) {
+    public void queueExchange(
+            Long playerId,
+            @Nullable Card leftCard,
+            @Nullable Card midCard,
+            @Nullable Card rightCard
+    ) {
         var playerIndex = game.getPlayerIndexById(playerId);
-
-        var cardMapper = new CardMapper();
-        var leftCard = cardMapper.toCardNullable(exchangeSend.getLeft());
-        var midCard = cardMapper.toCardNullable(exchangeSend.getMid());
-        var rightCard = cardMapper.toCardNullable(exchangeSend.getRight());
 
         checkExchange(leftCard, midCard, rightCard, game.getPlayer(playerIndex));
 

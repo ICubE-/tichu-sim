@@ -63,9 +63,16 @@ public class TichuService extends AbstractGameService {
     }
 
     public void exchange(String roomId, ExchangeSend exchangeSend, Principal principal) {
+        var cardMapper = new CardMapper();
+
         var game = getGame(roomId);
         var exchangePhase = game.getCurrentRound().getExchangePhase();
-        exchangePhase.queueExchange(Long.valueOf(principal.getName()), exchangeSend);
+        exchangePhase.queueExchange(
+                Long.valueOf(principal.getName()),
+                cardMapper.toCardNullable(exchangeSend.getLeft()),
+                cardMapper.toCardNullable(exchangeSend.getMid()),
+                cardMapper.toCardNullable(exchangeSend.getRight())
+        );
 
         publishQueuedEvents(game, roomId);
     }
