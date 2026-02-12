@@ -21,7 +21,7 @@ import java.security.Principal;
 public class TichuExchangeController {
     private final TichuService gameService;
 
-    @MessageMapping("/rooms/{roomId}/game/exchange")
+    @MessageMapping("/rooms/{roomId}/game/tichu/exchange")
     public void exchange(
             @DestinationVariable("roomId") String roomId,
             @Payload ExchangeSend exchangeSend,

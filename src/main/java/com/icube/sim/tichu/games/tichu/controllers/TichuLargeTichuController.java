@@ -18,7 +18,7 @@ import java.security.Principal;
 public class TichuLargeTichuController {
     private final TichuService gameService;
 
-    @MessageMapping("/rooms/{roomId}/game/large-tichu")
+    @MessageMapping("/rooms/{roomId}/game/tichu/large-tichu")
     public void largeTichu(
             @DestinationVariable("roomId") String roomId,
             @Payload LargeTichuSend largeTichuSend,

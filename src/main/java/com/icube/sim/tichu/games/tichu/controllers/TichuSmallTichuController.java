@@ -17,7 +17,7 @@ import java.security.Principal;
 public class TichuSmallTichuController {
     private final TichuService gameService;
 
-    @MessageMapping("/rooms/{roomId}/game/small-tichu")
+    @MessageMapping("/rooms/{roomId}/game/tichu/small-tichu")
     public void smallTichu(
             @DestinationVariable("roomId") String roomId,
             Principal principal

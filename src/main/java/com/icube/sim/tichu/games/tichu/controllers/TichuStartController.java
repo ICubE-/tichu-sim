@@ -15,7 +15,7 @@ import org.springframework.stereotype.Controller;
 public class TichuStartController {
     private final TichuService gameService;
 
-    @MessageMapping("/rooms/{roomId}/game/start")
+    @MessageMapping("/rooms/{roomId}/game/tichu/start")
     public void start(@DestinationVariable("roomId") String roomId) {
         gameService.start(roomId);
     }

@@ -16,8 +16,8 @@ import org.springframework.stereotype.Controller;
 public class TichuSetRuleController {
     private final TichuService gameService;
 
-    @MessageMapping("/rooms/{roomId}/game/set-rule")
-    public void setRule(@DestinationVariable("roomId") String roomId, @Payload TichuGameRule rule) {
+    @MessageMapping("/rooms/{roomId}/game/tichu/set-rule")
+    public void setRule(@DestinationVariable("roomId") String roomId, @Payload TichuRule rule) {
         gameService.setRule(roomId, rule);
     }
 
