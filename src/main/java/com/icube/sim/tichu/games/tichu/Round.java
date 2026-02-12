@@ -10,13 +10,13 @@ import java.util.*;
 
 public class Round {
     private RoundStatus status;
-    private final TichuGame game;
+    private final Tichu game;
     private final List<Card> deck;
     private final TichuDeclaration[] tichuDeclarations;
     private final ExchangePhase exchangePhase;
     private final List<Phase> phases;
 
-    public Round(TichuGame game) {
+    public Round(Tichu game) {
         this.game = game;
         this.tichuDeclarations = new TichuDeclaration[] {null, null, null, null};
         this.exchangePhase = new ExchangePhase(game, this);

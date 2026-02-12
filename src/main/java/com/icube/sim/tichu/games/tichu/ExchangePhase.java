@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class ExchangePhase {
-    private final TichuGame game;
+    private final Tichu game;
     private final Round round;
     // exchangingCards[i][j] = card to be exchanged from player i to player ((i + j + 1) % 4)
     private final Card[][] exchangingCards;
 
-    public ExchangePhase(TichuGame game, Round round) {
+    public ExchangePhase(Tichu game, Round round) {
         this.game = game;
         this.round = round;
         this.exchangingCards = new Card[4][3];

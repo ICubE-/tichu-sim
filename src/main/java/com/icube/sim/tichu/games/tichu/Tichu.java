@@ -6,9 +6,9 @@ import lombok.Synchronized;
 
 import java.util.*;
 
-public class TichuGame {
-    private TichuGameStatus status;
-    private final TichuGameRule rule;
+public class Tichu {
+    private TichuStatus status;
+    private final TichuRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;
     private final Map<Long, Integer> playerIndexById;
@@ -17,10 +17,10 @@ public class TichuGame {
     private final int[] scores;
     private final List<Round> rounds;
 
-    public TichuGame(TichuGameRule rule, Map<Long, Member> members) {
+    public Tichu(TichuRule rule, Map<Long, Member> members) {
         assert !rule.isMutable();
 
-        this.status = TichuGameStatus.PLAYING;
+        this.status = TichuStatus.PLAYING;
         this.rule = rule;
         this.players = new Player[4];
         this.playerIndexById = new HashMap<>();

@@ -1,7 +1,7 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
-import com.icube.sim.tichu.games.tichu.TichuGameRule;
+import com.icube.sim.tichu.games.tichu.TichuRule;
 import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.games.common.exceptions.ImmutableGameRuleException;
