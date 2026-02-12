@@ -14,7 +14,7 @@ import java.io.IOException;
 public class LoggingFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request, @NonNull HttpServletResponse response, FilterChain filterChain
+            @NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         System.out.println(request.getMethod() + " " + request.getRequestURI());
         filterChain.doFilter(request, response);
