@@ -1,9 +1,8 @@
 package com.icube.sim.tichu.rooms;
 
-import com.icube.sim.tichu.game.Game;
-import com.icube.sim.tichu.game.exceptions.GameHasAlreadyStartedException;
-import com.icube.sim.tichu.game.GameRule;
-import com.icube.sim.tichu.game.exceptions.GameNotFoundException;
+import com.icube.sim.tichu.games.common.domain.*;
+import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
+import com.icube.sim.tichu.games.common.exceptions.GameNotFoundException;
 import lombok.Getter;
 import lombok.Locked;
 
@@ -17,14 +16,16 @@ public class Room {
     private final String name;
     private final Map<Long, Member> members;
     @Getter
-    private final GameRule gameRule;
+    private final GameName gameName;
+    private final GameRuleWrapper gameRuleWrapper;
     private Game game;
 
     public Room(String id, String name) {
         this.id = id;
         this.name = name;
         this.members = new HashMap<>();
-        this.gameRule = new GameRule();
+        this.gameName = GameName.TICHU;
+        this.gameRuleWrapper = GameRuleWrapper.of(gameName);
         this.game = null;
     }
 
@@ -64,14 +65,19 @@ public class Room {
         return members.containsKey(memberId);
     }
 
+    @Locked.Read
+    public GameRule getGameRule() {
+        return gameRuleWrapper.getGameRule();
+    }
+
     @Locked.Write
     public void setGameRule(GameRule gameRule) {
-        gameRule.set(gameRule);
+        gameRuleWrapper.setGameRule(gameRule);
     }
 
     @Locked.Read
     public boolean hasGameStarted() {
-        return game != null && game.isPlaying();
+        return game != null;
     }
 
     @Locked.Write
@@ -83,8 +89,8 @@ public class Room {
             throw new GameHasAlreadyStartedException();
         }
 
-        gameRule.setMutable(false);
-        game = new Game(gameRule, members);
+        gameRuleWrapper.setMutable(false);
+        game = GameBuilder.build(gameName, gameRuleWrapper.getGameRule(), members);
     }
 
     @Locked.Read
