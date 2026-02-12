@@ -3,7 +3,7 @@ package com.icube.sim.tichu.users;
 import com.icube.sim.tichu.common.ErrorDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
