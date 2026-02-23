@@ -24,7 +24,7 @@ public class Round {
         this.exchangePhase = new ExchangePhase(game, this);
         this.phases = new ArrayList<>();
 
-        this.deck = Card.getDeck();
+        this.deck = Cards.getDeck();
         Collections.shuffle(deck);
         assert deck.size() == 56;
 
