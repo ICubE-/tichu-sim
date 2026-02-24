@@ -42,9 +42,14 @@ public class TichuService extends AbstractGameService {
     }
 
     public void largeTichu(String roomId, LargeTichuSend largeTichuSend, Principal principal) {
+        var isLargeTichuDeclared = largeTichuSend.getIsLargeTichuDeclared();
+        if (isLargeTichuDeclared == null) {
+            throw new InvalidTichuDeclarationException();
+        }
+
         var game = getGame(roomId);
         var round = game.getCurrentRound();
-        round.largeTichu(Long.valueOf(principal.getName()), largeTichuSend);
+        round.largeTichu(Long.valueOf(principal.getName()), isLargeTichuDeclared);
 
         publishQueuedEvents(game, roomId);
     }
@@ -58,9 +63,16 @@ public class TichuService extends AbstractGameService {
     }
 
     public void exchange(String roomId, ExchangeSend exchangeSend, Principal principal) {
+        var cardMapper = new CardMapper();
+
         var game = getGame(roomId);
         var exchangePhase = game.getCurrentRound().getExchangePhase();
-        exchangePhase.queueExchange(Long.valueOf(principal.getName()), exchangeSend);
+        exchangePhase.queueExchange(
+                Long.valueOf(principal.getName()),
+                cardMapper.toCardNullable(exchangeSend.getLeft()),
+                cardMapper.toCardNullable(exchangeSend.getMid()),
+                cardMapper.toCardNullable(exchangeSend.getRight())
+        );
 
         publishQueuedEvents(game, roomId);
     }

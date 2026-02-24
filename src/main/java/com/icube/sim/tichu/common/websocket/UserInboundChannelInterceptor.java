@@ -1,6 +1,6 @@
 package com.icube.sim.tichu.common.websocket;
 
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.server.PathContainer;
 import org.springframework.messaging.Message;

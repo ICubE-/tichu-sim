@@ -4,7 +4,7 @@ import com.icube.sim.tichu.common.ErrorDto;
 import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;

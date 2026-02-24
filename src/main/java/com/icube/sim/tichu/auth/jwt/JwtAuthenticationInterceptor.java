@@ -1,7 +1,7 @@
 package com.icube.sim.tichu.auth.jwt;
 
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;

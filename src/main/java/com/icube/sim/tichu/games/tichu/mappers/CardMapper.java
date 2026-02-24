@@ -1,9 +1,10 @@
 package com.icube.sim.tichu.games.tichu.mappers;
 
 import com.icube.sim.tichu.games.tichu.cards.*;
-import com.icube.sim.tichu.games.tichu.cards.*;
 import com.icube.sim.tichu.games.tichu.dtos.CardDto;
 import com.icube.sim.tichu.games.tichu.dtos.CardType;
+import com.icube.sim.tichu.games.tichu.exceptions.CardMappingException;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -26,7 +27,14 @@ public class CardMapper {
 
     public Card toCard(CardDto cardDto) {
         return switch (cardDto.getType()) {
-            case STANDARD -> new StandardCard(cardDto.getSuit(), cardDto.getRank());
+            case STANDARD -> {
+                if (cardDto.getSuit() == null || cardDto.getRank() == null) {
+                    throw new CardMappingException();
+                } else if (cardDto.getRank() < 2 || cardDto.getRank() > 14) {
+                    throw new CardMappingException();
+                }
+                yield new StandardCard(cardDto.getSuit(), cardDto.getRank());
+            }
             case SPARROW -> new SparrowCard();
             case PHOENIX -> new PhoenixCard();
             case DRAGON -> new DragonCard();
@@ -34,7 +42,7 @@ public class CardMapper {
         };
     }
 
-    public Card toCardNullable(CardDto cardDto) {
+    public @Nullable Card toCardNullable(CardDto cardDto) {
         return cardDto == null ? null : toCard(cardDto);
     }
 

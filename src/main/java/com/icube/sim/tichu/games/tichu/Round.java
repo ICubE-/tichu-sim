@@ -1,7 +1,6 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.tichu.cards.Card;
-import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
 import com.icube.sim.tichu.games.tichu.events.TichuFirstDrawEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuLargeTichuEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuSecondDrawEvent;
@@ -25,7 +24,7 @@ public class Round {
         this.exchangePhase = new ExchangePhase(game, this);
         this.phases = new ArrayList<>();
 
-        this.deck = Card.getDeck();
+        this.deck = Cards.getDeck();
         Collections.shuffle(deck);
         assert deck.size() == 56;
 
@@ -47,7 +46,7 @@ public class Round {
         game.addEvent(new TichuFirstDrawEvent(firstDraws));
     }
 
-    public void largeTichu(Long playerId, LargeTichuSend largeTichuSend) {
+    public void largeTichu(Long playerId, boolean isLargeTichuDeclared) {
         if (status != RoundStatus.WAITING_LARGE_TICHU) {
             throw new InvalidTimeOfActionException();
         }
@@ -56,9 +55,7 @@ public class Round {
         if (tichuDeclarations[playerIndex] != null) {
             throw new InvalidTichuDeclarationException();
         }
-        tichuDeclarations[playerIndex] = largeTichuSend.getIsLargeTichuDeclared() ?
-                TichuDeclaration.LARGE : TichuDeclaration.NONE;
-
+        tichuDeclarations[playerIndex] = isLargeTichuDeclared ? TichuDeclaration.LARGE : TichuDeclaration.NONE;
 
         game.addEvent(new TichuLargeTichuEvent(tichuDeclarations));
 
