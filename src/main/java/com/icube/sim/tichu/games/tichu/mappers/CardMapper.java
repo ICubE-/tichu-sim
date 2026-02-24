@@ -30,6 +30,8 @@ public class CardMapper {
             case STANDARD -> {
                 if (cardDto.getSuit() == null || cardDto.getRank() == null) {
                     throw new CardMappingException();
+                } else if (cardDto.getRank() < 2 || cardDto.getRank() > 14) {
+                    throw new CardMappingException();
                 }
                 yield new StandardCard(cardDto.getSuit(), cardDto.getRank());
             }
