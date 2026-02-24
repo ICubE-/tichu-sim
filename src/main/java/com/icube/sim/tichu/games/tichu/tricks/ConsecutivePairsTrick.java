@@ -2,9 +2,12 @@ package com.icube.sim.tichu.games.tichu.tricks;
 
 import com.icube.sim.tichu.games.tichu.cards.Card;
 import com.icube.sim.tichu.games.tichu.cards.Cards;
+import com.icube.sim.tichu.games.tichu.cards.StandardCard;
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class ConsecutivePairsTrick extends Trick {
@@ -173,5 +176,52 @@ public class ConsecutivePairsTrick extends Trick {
         }
 
         return true;
+    }
+
+    public boolean canCoverUp(ConsecutivePairsTrick other) {
+        return length() == other.length() && maxRank > other.maxRank;
+    }
+
+    @Override
+    public boolean canCoverUp(@Nullable Trick other) {
+        return other == null || (other instanceof ConsecutivePairsTrick other1 && canCoverUp(other1));
+    }
+
+    @Override
+    public boolean canPlayWishCardAfter(int wish, List<Card> hand) {
+        return canPlayWishCard(wish, hand, this)
+                || FourOfAKindTrick.canPlayWishCard(wish, hand, null)
+                || StraightFlushTrick.canPlayWishCard(wish, hand, null);
+    }
+
+    private static boolean canPlayWishCard(int wish, List<Card> hand, ConsecutivePairsTrick prevTrick) {
+        var cardCounts = Cards.extractStandardCards(hand).stream()
+                .collect(Collectors.groupingBy(StandardCard::rank, Collectors.counting()));
+        if (cardCounts.getOrDefault(wish, 0L) == 0L) {
+            return false;
+        }
+
+        var hasPhoenix = Cards.containsPhoenix(hand);
+        var length = prevTrick.length();
+
+        for (var segStart = prevTrick.getMinRank() + 1; segStart <= 15 - length; segStart++) {
+            var segEnd = segStart + length - 1;
+            if (wish < segStart || segEnd < wish) {
+                continue;
+            }
+
+            var missing = 0L;
+            for (var r = segStart; r <= segEnd; r++) {
+                long count = cardCounts.getOrDefault(r, 0L);
+                if (count < 2) {
+                    missing += 2 - count;
+                }
+            }
+            if (missing == 0 || (hasPhoenix && missing == 1)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

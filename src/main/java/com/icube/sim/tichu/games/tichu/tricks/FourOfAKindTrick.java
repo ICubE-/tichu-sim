@@ -3,6 +3,7 @@ package com.icube.sim.tichu.games.tichu.tricks;
 import com.icube.sim.tichu.games.tichu.cards.Card;
 import com.icube.sim.tichu.games.tichu.cards.Cards;
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -40,5 +41,36 @@ public class FourOfAKindTrick extends Trick {
                 && standardCards.get(0).rank() == standardCards.get(1).rank()
                 && standardCards.get(1).rank() == standardCards.get(2).rank()
                 && standardCards.get(2).rank() == standardCards.get(3).rank();
+    }
+
+    public boolean canCoverUp(FourOfAKindTrick other) {
+        return rank > other.getRank();
+    }
+
+    @Override
+    public boolean canCoverUp(Trick other) {
+        if (other instanceof StraightFlushTrick) {
+            return false;
+        } else if (other instanceof FourOfAKindTrick other1) {
+            return canCoverUp(other1);
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public boolean canPlayWishCardAfter(int wish, List<Card> hand) {
+        return canPlayWishCard(wish, hand, this)
+                || StraightFlushTrick.canPlayWishCard(wish, hand, null);
+    }
+
+    public static boolean canPlayWishCard(int wish, List<Card> hand, @Nullable FourOfAKindTrick prevTrick) {
+        if (prevTrick != null && wish <= prevTrick.getRank()) {
+            return false;
+        }
+        var wishCardCount = Cards.extractStandardCards(hand).stream()
+                .filter(card -> card.rank() == wish)
+                .count();
+        return wishCardCount == 4;
     }
 }

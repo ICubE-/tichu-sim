@@ -52,4 +52,31 @@ public class PairTrick extends Trick {
             return standardCards.size() == 2 && standardCards.get(0).rank() == standardCards.get(1).rank();
         }
     }
+
+    public boolean canCoverUp(PairTrick other) {
+        return rank > other.getRank();
+    }
+
+    @Override
+    public boolean canCoverUp(Trick other) {
+        return other == null || (other instanceof PairTrick other1 && canCoverUp(other1));
+    }
+
+    @Override
+    public boolean canPlayWishCardAfter(int wish, List<Card> hand) {
+        return canPlayWishCard(wish, hand, this)
+                || FourOfAKindTrick.canPlayWishCard(wish, hand, null)
+                || StraightFlushTrick.canPlayWishCard(wish, hand, null);
+    }
+
+    private static boolean canPlayWishCard(int wish, List<Card> hand, PairTrick prevTrick) {
+        if (wish <= prevTrick.getRank()) {
+            return false;
+        }
+        var wishCardCount = Cards.extractStandardCards(hand).stream()
+                .filter(card -> card.rank() == wish)
+                .count();
+        return (Cards.containsPhoenix(hand) && wishCardCount >= 1)
+                || wishCardCount >= 2;
+    }
 }

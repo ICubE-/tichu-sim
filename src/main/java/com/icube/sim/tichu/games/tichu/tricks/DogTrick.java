@@ -16,4 +16,14 @@ public class DogTrick extends Trick {
     public TrickType getType() {
         return TrickType.DOG;
     }
+
+    @Override
+    public boolean canCoverUp(Trick other) {
+        return false;
+    }
+
+    @Override
+    public boolean canPlayWishCardAfter(int wish, List<Card> hand) {
+        return false;
+    }
 }

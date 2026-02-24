@@ -1,18 +1,23 @@
 package com.icube.sim.tichu.games.tichu.tricks;
 
+import lombok.Getter;
+
+@Getter
 public enum TrickType {
-    SINGLE,
-    PAIR,
-    CONSECUTIVE_PAIRS,
-    THREE_OF_A_KIND,
-    FULL_HOUSE,
-    STRAIGHT,
-    DOG,
-    FOUR_OF_A_KIND,
-    STRAIGHT_FLUSH,
+    SINGLE(false),
+    PAIR(false),
+    CONSECUTIVE_PAIRS(false),
+    THREE_OF_A_KIND(false),
+    FULL_HOUSE(false),
+    STRAIGHT(false),
+    DOG(false),
+    FOUR_OF_A_KIND(true),
+    STRAIGHT_FLUSH(true),
     ;
 
-    public boolean isBomb() {
-        return this == FOUR_OF_A_KIND || this == STRAIGHT_FLUSH;
+    private final boolean isBomb;
+
+    TrickType(boolean isBomb) {
+        this.isBomb = isBomb;
     }
 }
