@@ -1,12 +1,13 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.tichu.cards.Card;
-import com.icube.sim.tichu.games.tichu.events.TichuFirstDrawEvent;
-import com.icube.sim.tichu.games.tichu.events.TichuLargeTichuEvent;
-import com.icube.sim.tichu.games.tichu.events.TichuSecondDrawEvent;
-import com.icube.sim.tichu.games.tichu.events.TichuSmallTichuEvent;
+import com.icube.sim.tichu.games.tichu.cards.Cards;
+import com.icube.sim.tichu.games.tichu.cards.SparrowCard;
+import com.icube.sim.tichu.games.tichu.events.*;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
 import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.*;
 
@@ -17,12 +18,20 @@ public class Round {
     private final TichuDeclaration[] tichuDeclarations;
     private final ExchangePhase exchangePhase;
     private final List<Phase> phases;
+    @Getter
+    @Setter
+    private Integer wish;
+    private final int[] exitOrder;
+    // Score order: { RED, BLUE }
+    private int[] scores;
 
     public Round(Tichu game) {
         this.game = game;
         this.tichuDeclarations = new TichuDeclaration[] { null, null, null, null };
         this.exchangePhase = new ExchangePhase(game, this);
         this.phases = new ArrayList<>();
+        this.exitOrder = new int[] { 0, 0, 0, 0 };
+        this.scores = null;
 
         this.deck = Cards.getDeck();
         Collections.shuffle(deck);
@@ -105,9 +114,134 @@ public class Round {
     public void finishExchangePhase() {
         assert status == RoundStatus.EXCHANGING;
         status = RoundStatus.PLAYING;
-        nextPhase();
+
+        int sparrowPlayerIndex;
+        for (sparrowPlayerIndex = 0; sparrowPlayerIndex < 4; sparrowPlayerIndex++) {
+            if (game.getPlayer(sparrowPlayerIndex).hasCard(new SparrowCard())) {
+                break;
+            }
+        }
+        assert sparrowPlayerIndex < 4;
+
+        nextPhase(sparrowPlayerIndex);
     }
 
-    public void nextPhase() {
+    public void nextPhase(int firstPlayerIndex) {
+        assert status == RoundStatus.PLAYING;
+
+        var playerIndex = firstPlayerIndex;
+        do {
+            playerIndex = (playerIndex + 1) % 4;
+        } while (isPlayerExited(playerIndex));
+
+        phases.add(new Phase(game, this, playerIndex));
+    }
+
+    public Phase getCurrentPhase() {
+        if (status != RoundStatus.PLAYING) {
+            throw new InvalidTimeOfActionException();
+        }
+
+        return phases.getLast();
+    }
+
+    public boolean isPlayerExited(int playerIndex) {
+        return exitOrder[playerIndex] != 0;
+    }
+
+    public void markPlayerAsExited(int playerIndex) {
+        assert exitOrder[playerIndex] == 0;
+        assert game.getPlayer(playerIndex).getHandSize() == 0;
+
+        var playerExitOrder = Arrays.stream(exitOrder).max().orElseThrow() + 1;
+        exitOrder[playerIndex] = playerExitOrder;
+    }
+
+    public boolean isOneTwo() {
+        return (exitOrder[0] == 1 && exitOrder[2] == 2)
+                || (exitOrder[1] == 1 && exitOrder[3] == 2)
+                || (exitOrder[2] == 1 && exitOrder[0] == 2)
+                || (exitOrder[3] == 1 && exitOrder[1] == 2);
+    }
+
+    public void finishOneTwo() {
+        assert status == RoundStatus.PLAYING;
+        assert isOneTwo();
+        assert Arrays.stream(exitOrder).sorted().boxed().toList().equals(List.of(0, 0, 1, 2));
+        assert scores == null;
+
+        status = RoundStatus.FINISHED;
+        scores = new int[] { 0, 0 };
+
+        calcTichuDeclarationScores();
+        for (var i = 0; i < 4; i++) {
+            var teamIndex = i % 2;
+            if (exitOrder[i] != 0) {
+                scores[teamIndex] += 100;
+                assert game.getPlayer(i).getHandSize() == 0;
+            }
+            var player = game.getPlayer(i);
+            player.clearCards();
+        }
+
+        game.nextRound();
+    }
+
+    public boolean isOnePlayerLeft() {
+        return Arrays.stream(exitOrder).filter(exitOrder -> exitOrder == 0).count() == 1;
+    }
+
+    public void finish() {
+        assert status == RoundStatus.PLAYING;
+        assert Arrays.stream(exitOrder).sorted().boxed().toList().equals(List.of(0, 1, 2, 3));
+        assert scores == null;
+
+        status = RoundStatus.FINISHED;
+        scores = new int[] { 0, 0 };
+
+        calcTichuDeclarationScores();
+        for (var i = 0; i < 4; i++) {
+            var teamIndex = i % 2;
+            var player = game.getPlayer(i);
+            if (exitOrder[i] != 0) {
+                scores[teamIndex] += player.sumScore();
+                assert player.getHandSize() == 0;
+            } else {
+                var firstPlayerTeamIndex = Arrays.stream(exitOrder).boxed().toList().indexOf(1) % 2;
+                scores[firstPlayerTeamIndex] += player.sumScore();
+                scores[(teamIndex + 1) % 2] += player.sumScoreInHand();
+            }
+            player.clearCards();
+        }
+
+        game.nextRound();
+    }
+
+    private void calcTichuDeclarationScores() {
+        for (var i = 0; i < 4; i++) {
+            var teamIndex = i % 2;
+            switch (tichuDeclarations[i]) {
+                case NONE -> {
+                }
+                case SMALL -> {
+                    if (exitOrder[i] == 1) {
+                        scores[teamIndex] += 100;
+                    } else {
+                        scores[teamIndex] -= 100;
+                    }
+                }
+                case LARGE -> {
+                    if (exitOrder[i] == 1) {
+                        scores[teamIndex] += 200;
+                    } else {
+                        scores[teamIndex] -= 200;
+                    }
+                }
+            }
+        }
+    }
+
+    public List<Integer> getScore() {
+        return Arrays.stream(scores).boxed().toList();
     }
 }
