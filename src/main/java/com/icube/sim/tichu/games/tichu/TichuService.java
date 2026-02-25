@@ -4,8 +4,7 @@ import com.icube.sim.tichu.games.common.domain.Game;
 import com.icube.sim.tichu.games.common.domain.GameRule;
 import com.icube.sim.tichu.games.common.event.GameSetRuleEvent;
 import com.icube.sim.tichu.games.common.service.AbstractGameService;
-import com.icube.sim.tichu.games.tichu.dtos.ExchangeSend;
-import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
+import com.icube.sim.tichu.games.tichu.dtos.*;
 import com.icube.sim.tichu.games.tichu.events.TichuSetRuleEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
@@ -79,6 +78,38 @@ public class TichuService extends AbstractGameService {
         );
 
         publishQueuedEvents(game, roomId);
+    }
+
+    public void playTrick(String roomId, TrickSend trickSend, Principal principal) {
+        var game = getGame(roomId);
+        var phase = game.getCurrentRound().getCurrentPhase();
+        phase.playTrick(
+                getPlayerId(principal),
+                cardMapper.toCards(trickSend.getCards()),
+                trickSend.getWish()
+        );
+    }
+
+    public void playBomb(String roomId, BombSend bombSend, Principal principal) {
+        var game = getGame(roomId);
+        var phase = game.getCurrentRound().getCurrentPhase();
+        phase.playBomb(getPlayerId(principal), cardMapper.toCards(bombSend.getCards()));
+    }
+
+    public void pass(String roomId, Principal principal) {
+        var game = getGame(roomId);
+        var phase = game.getCurrentRound().getCurrentPhase();
+        phase.pass(getPlayerId(principal));
+    }
+
+    public void selectDragonReceiver(
+            String roomId,
+            SelectDragonReceiverSend selectDragonReceiverSend,
+            Principal principal
+    ) {
+        var game = getGame(roomId);
+        var phase = game.getCurrentRound().getCurrentPhase();
+        phase.selectDragonReceiver(getPlayerId(principal), selectDragonReceiverSend.getGiveRight());
     }
 
     @Override
