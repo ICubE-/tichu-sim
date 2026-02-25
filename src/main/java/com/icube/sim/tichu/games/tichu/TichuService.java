@@ -8,8 +8,11 @@ import com.icube.sim.tichu.games.tichu.dtos.ExchangeSend;
 import com.icube.sim.tichu.games.tichu.dtos.LargeTichuSend;
 import com.icube.sim.tichu.games.tichu.events.TichuSetRuleEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
+import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
+import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
 import com.icube.sim.tichu.rooms.Room;
 import com.icube.sim.tichu.rooms.RoomRepository;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +20,11 @@ import java.security.Principal;
 
 @Service
 public class TichuService extends AbstractGameService {
+    private final CardMapper cardMapper;
+
     public TichuService(RoomRepository roomRepository, ApplicationEventPublisher eventPublisher) {
         super(roomRepository, eventPublisher);
+        cardMapper = new CardMapper();
     }
 
     @Override
@@ -49,7 +55,7 @@ public class TichuService extends AbstractGameService {
 
         var game = getGame(roomId);
         var round = game.getCurrentRound();
-        round.largeTichu(Long.valueOf(principal.getName()), isLargeTichuDeclared);
+        round.largeTichu(getPlayerId(principal), isLargeTichuDeclared);
 
         publishQueuedEvents(game, roomId);
     }
@@ -57,18 +63,16 @@ public class TichuService extends AbstractGameService {
     public void smallTichu(String roomId, Principal principal) {
         var game = getGame(roomId);
         var round = game.getCurrentRound();
-        round.smallTichu(Long.valueOf(principal.getName()));
+        round.smallTichu(getPlayerId(principal));
 
         publishQueuedEvents(game, roomId);
     }
 
     public void exchange(String roomId, ExchangeSend exchangeSend, Principal principal) {
-        var cardMapper = new CardMapper();
-
         var game = getGame(roomId);
         var exchangePhase = game.getCurrentRound().getExchangePhase();
         exchangePhase.queueExchange(
-                Long.valueOf(principal.getName()),
+                getPlayerId(principal),
                 cardMapper.toCardNullable(exchangeSend.getLeft()),
                 cardMapper.toCardNullable(exchangeSend.getMid()),
                 cardMapper.toCardNullable(exchangeSend.getRight())
@@ -80,5 +84,9 @@ public class TichuService extends AbstractGameService {
     @Override
     protected Tichu getGame(String roomId) {
         return (Tichu) super.getGame(roomId);
+    }
+
+    private static @NonNull Long getPlayerId(Principal principal) {
+        return Long.valueOf(principal.getName());
     }
 }
