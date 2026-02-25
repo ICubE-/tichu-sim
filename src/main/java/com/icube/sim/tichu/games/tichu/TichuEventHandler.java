@@ -6,7 +6,6 @@ import com.icube.sim.tichu.games.tichu.events.*;
 import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
 import com.icube.sim.tichu.games.tichu.mappers.PlayerMapper;
 import com.icube.sim.tichu.rooms.RoomRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -14,11 +13,17 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.Set;
 
-@RequiredArgsConstructor
 @Component
 public class TichuEventHandler {
     private final RoomRepository roomRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CardMapper cardMapper;
+
+    public TichuEventHandler(RoomRepository roomRepository, SimpMessagingTemplate messagingTemplate) {
+        this.roomRepository = roomRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.cardMapper = new CardMapper();
+    }
 
     @EventListener
     public void onSetRule(TichuSetRuleEvent event) {
@@ -65,7 +70,6 @@ public class TichuEventHandler {
     @EventListener
     public void onSecondDraw(TichuSecondDrawEvent event) {
         var hands = event.getHands();
-        var cardMapper = new CardMapper();
 
         for (var userId : getRoomMemberIds(event.getRoomId())) {
             var playerHand = cardMapper.toDtos(hands.get(userId));
@@ -85,8 +89,6 @@ public class TichuEventHandler {
 
     @EventListener
     public void onExchange(TichuExchangeEvent event) {
-        var cardMapper = new CardMapper();
-
         for (var userId : getRoomMemberIds(event.getRoomId())) {
             var message = TichuMessage.exchange(new ExchangeMessage(
                     cardMapper.toDto(event.getCardGaveLeftFrom(userId)),
