@@ -75,7 +75,7 @@ public class Phase {
 
         player.playCards(cards);
         tricks.add(trick);
-        game.addEvent(new TichuPlayTrickEvent(playerId, trick));
+        game.addEvent(new TichuPlayTrickEvent(playerId, trick, wish));
         do {
             turn = (turn + 1) % 4;
         } while (round.isPlayerExited(turn));
