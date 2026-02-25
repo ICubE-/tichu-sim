@@ -4,7 +4,6 @@ import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
 import com.icube.sim.tichu.games.tichu.cards.*;
 import com.icube.sim.tichu.games.tichu.events.*;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidBombException;
-import com.icube.sim.tichu.games.tichu.exceptions.InvalidFinishPhaseWithDragonException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTrickException;
 import com.icube.sim.tichu.games.tichu.tricks.*;
 import org.jspecify.annotations.Nullable;
@@ -198,7 +197,7 @@ public class Phase {
         } while (round.isPlayerExited(turn));
     }
 
-    public void finishPhaseWithDragon(Long playerId, Long receiverId) {
+    public void selectDragonReceiver(Long playerId, boolean giveRight) {
         if (status != PhaseStatus.WAITING_DRAGON_SELECTION) {
             throw new InvalidTimeOfActionException();
         }
@@ -215,15 +214,11 @@ public class Phase {
             throw new InvalidTimeOfActionException();
         }
 
-        var receiverIndex = game.getPlayerIndexById(receiverId);
-        if (receiverIndex != (playerIndex + 1) % 4 || receiverIndex != (playerIndex + 3) % 4) {
-            throw new InvalidFinishPhaseWithDragonException();
-        }
-
+        var receiverIndex = (playerIndex + (giveRight ? 1 : 3)) % 4;
         var receiver = game.getPlayer(receiverIndex);
         var allPlayedCards = tricks.stream().flatMap(trick -> trick.getCards().stream()).toList();
         receiver.addScoreCards(allPlayedCards);
-        game.addEvent(new TichuSelectDragonReceiverEvent(receiverId));
+        game.addEvent(new TichuSelectDragonReceiverEvent(receiver.getId()));
 
         status = PhaseStatus.FINISHED;
         round.nextPhase(playerIndex);
