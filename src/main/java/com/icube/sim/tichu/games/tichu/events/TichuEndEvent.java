@@ -6,9 +6,9 @@ import java.util.List;
 
 @Getter
 public class TichuEndEvent extends TichuEvent {
-    private final List<List<Integer>> scores;
+    private final List<int[]> scoresHistory;
 
-    public TichuEndEvent(List<List<Integer>> scores) {
-        this.scores = scores;
+    public TichuEndEvent(List<int[]> scoresHistory) {
+        this.scoresHistory = scoresHistory;
     }
 }

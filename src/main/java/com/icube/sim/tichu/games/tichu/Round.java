@@ -241,7 +241,7 @@ public class Round {
         }
     }
 
-    public List<Integer> getScore() {
-        return Arrays.stream(scores).boxed().toList();
+    public int[] getScores() {
+        return scores.clone();
     }
 }

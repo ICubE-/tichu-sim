@@ -72,21 +72,17 @@ public class Tichu extends AbstractGame {
     }
 
     public void nextRound() {
-        var scores = getScores();
-        addEvent(new TichuRoundEndEvent(scores));
+        var scoresHistory = rounds.stream().map(Round::getScores).toList();
+        addEvent(new TichuRoundEndEvent(scoresHistory));
 
-        var redTotalScore = scores.stream().mapToInt(score -> score.get(0)).sum();
-        var blueTotalScore = scores.stream().mapToInt(score -> score.get(1)).sum();
+        var redTotalScore = scoresHistory.stream().mapToInt(score -> score[0]).sum();
+        var blueTotalScore = scoresHistory.stream().mapToInt(score -> score[1]).sum();
         // todo: set max score in rules
         if (redTotalScore < 1000 && blueTotalScore < 1000) {
             rounds.add(new Round(this));
         } else {
-            addEvent(new TichuEndEvent(scores));
+            addEvent(new TichuEndEvent(scoresHistory));
             // todo: manage room.game in event handler
         }
-    }
-
-    private List<List<Integer>> getScores() {
-        return rounds.stream().map(Round::getScore).toList();
     }
 }
