@@ -47,7 +47,7 @@ public class Phase {
         }
 
         var player = game.getPlayer(playerIndex);
-        if (!player.hasAllCards(cards)) {
+        if (player.doNotHaveSomeCards(cards)) {
             throw new InvalidTrickException();
         }
 
@@ -121,7 +121,7 @@ public class Phase {
         }
 
         var player = game.getPlayer(playerIndex);
-        if (!player.hasAllCards(cards)) {
+        if (player.doNotHaveSomeCards(cards)) {
             throw new InvalidBombException();
         }
 

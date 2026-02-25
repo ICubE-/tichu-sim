@@ -41,8 +41,8 @@ public class Player {
         return hand.contains(card);
     }
 
-    public boolean hasAllCards(List<Card> cards) {
-        return new HashSet<>(hand).containsAll(cards);
+    public boolean doNotHaveSomeCards(List<Card> cards) {
+        return !new HashSet<>(hand).containsAll(cards);
     }
 
     public boolean canPlayWishCard(int wish, @Nullable Trick prevTrick) {
