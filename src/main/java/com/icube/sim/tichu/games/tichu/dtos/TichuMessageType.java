@@ -8,6 +8,12 @@ public enum TichuMessageType {
     ADD_SECOND_DRAWS,
     SMALL_TICHU,
     EXCHANGE,
-    PLAY,
+    PHASE_START,
+    PLAY_TRICK,
+    PLAY_BOMB,
     PASS,
+    PHASE_END_WITH_DRAGON,
+    SELECT_DRAGON_RECEIVER,
+    ROUND_END,
+    END,
 }

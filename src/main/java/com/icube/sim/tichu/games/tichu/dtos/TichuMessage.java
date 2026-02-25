@@ -43,4 +43,35 @@ public class TichuMessage {
     public static TichuMessage exchange(ExchangeMessage exchangeMessage) {
         return new TichuMessage(TichuMessageType.EXCHANGE, exchangeMessage);
     }
+
+    public static TichuMessage phaseStart(int firstPlayerIndex) {
+        return new TichuMessage(TichuMessageType.PHASE_START, firstPlayerIndex);
+    }
+
+    public static TichuMessage playTrick(PlayTrickMessage playTrickMessage) {
+        return new TichuMessage(TichuMessageType.PLAY_TRICK, playTrickMessage);
+    }
+
+    public static TichuMessage playBomb(PlayBombMessage playBombMessage) {
+        return new TichuMessage(TichuMessageType.PLAY_BOMB, playBombMessage);
+    }
+
+    public static TichuMessage pass(Long playerId) {
+        return new TichuMessage(TichuMessageType.PASS, playerId);
+    }
+
+    public static TichuMessage phaseEndWithDragon(int playerIndex) {
+        return new TichuMessage(TichuMessageType.PHASE_END_WITH_DRAGON, playerIndex);
+    }
+
+    public static TichuMessage selectDragonReceiver(Long receiverId) {
+        return new TichuMessage(TichuMessageType.SELECT_DRAGON_RECEIVER, receiverId);
+    }
+
+    public static TichuMessage roundEnd(List<int[]> scoresHistory) {
+        return new TichuMessage(TichuMessageType.ROUND_END, scoresHistory);
+    }
+    public static TichuMessage end(List<int[]> scoresHistory) {
+        return new TichuMessage(TichuMessageType.END, scoresHistory);
+    }
 }

@@ -1,10 +1,13 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.tichu.dtos.ExchangeMessage;
+import com.icube.sim.tichu.games.tichu.dtos.PlayBombMessage;
+import com.icube.sim.tichu.games.tichu.dtos.PlayTrickMessage;
 import com.icube.sim.tichu.games.tichu.dtos.TichuMessage;
 import com.icube.sim.tichu.games.tichu.events.*;
 import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
 import com.icube.sim.tichu.games.tichu.mappers.PlayerMapper;
+import com.icube.sim.tichu.games.tichu.mappers.TrickMapper;
 import com.icube.sim.tichu.rooms.RoomRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,11 +21,13 @@ public class TichuEventHandler {
     private final RoomRepository roomRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final CardMapper cardMapper;
+    private final TrickMapper trickMapper;
 
     public TichuEventHandler(RoomRepository roomRepository, SimpMessagingTemplate messagingTemplate) {
         this.roomRepository = roomRepository;
         this.messagingTemplate = messagingTemplate;
         this.cardMapper = new CardMapper();
+        this.trickMapper = new TrickMapper();
     }
 
     @EventListener
@@ -98,6 +103,85 @@ public class TichuEventHandler {
                     cardMapper.toDto(event.getCardReceivedFromMid(userId)),
                     cardMapper.toDto(event.getCardReceivedFromRight(userId))
             ));
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onPhaseStart(TichuPhaseStartEvent event) {
+        var message = TichuMessage.phaseStart(event.getFirstPlayerIndex());
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onPlayTrick(TichuPlayTrickEvent event) {
+        var message = TichuMessage.playTrick(new PlayTrickMessage(
+                event.getPlayerId(),
+                trickMapper.toDto(event.getTrick()),
+                event.getWish()
+        ));
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onPlayBomb(TichuPlayBombEvent event) {
+        var message = TichuMessage.playBomb(new PlayBombMessage(
+                event.getPlayerId(),
+                trickMapper.toDto(event.getBomb())
+        ));
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onPass(TichuPassEvent event) {
+        var message = TichuMessage.pass(event.getPlayerId());
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onPhaseEndWithDragon(TichuPhaseEndWithDragonEvent event) {
+        var message = TichuMessage.phaseEndWithDragon(event.getPlayerIndex());
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onSelectDragonReceiver(TichuSelectDragonReceiverEvent event) {
+        var message = TichuMessage.selectDragonReceiver(event.getReceiverId());
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onRoundEnd(TichuRoundEndEvent event) {
+        var message = TichuMessage.roundEnd(event.getScoresHistory());
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
+            sendToUser(userId, message);
+        }
+    }
+
+    @EventListener
+    public void onGameEnd(TichuEndEvent event) {
+        var message = TichuMessage.end(event.getScoresHistory());
+
+        for (var userId : getRoomMemberIds(event.getRoomId())) {
             sendToUser(userId, message);
         }
     }
