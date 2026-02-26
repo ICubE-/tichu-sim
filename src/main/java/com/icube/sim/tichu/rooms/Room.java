@@ -101,4 +101,10 @@ public class Room {
 
         return game;
     }
+
+    @Locked.Write
+    public void endGame() {
+        game = null;
+        gameRuleWrapper.setMutable(true);
+    }
 }

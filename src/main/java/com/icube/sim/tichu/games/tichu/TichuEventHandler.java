@@ -184,6 +184,9 @@ public class TichuEventHandler {
         for (var userId : getRoomMemberIds(event.getRoomId())) {
             sendToUser(userId, message);
         }
+
+        var room = roomRepository.findById(event.getRoomId()).orElseThrow();
+        room.endGame();
     }
 
     private Set<Long> getRoomMemberIds(String roomId) {
