@@ -1,7 +1,9 @@
 package com.icube.sim.tichu.games.tichu;
 
 import com.icube.sim.tichu.games.common.domain.AbstractGame;
+import com.icube.sim.tichu.games.tichu.events.TichuEndEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuStartEvent;
+import com.icube.sim.tichu.games.tichu.events.TichuRoundEndEvent;
 import com.icube.sim.tichu.rooms.Member;
 import lombok.Locked;
 
@@ -12,8 +14,6 @@ public class Tichu extends AbstractGame {
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;
     private final Map<Long, Integer> playerIndexById;
-    // Score order: { RED, BLUE }
-    private final int[] scores;
     private final List<Round> rounds;
 
     public Tichu(TichuRule rule, Map<Long, Member> members) {
@@ -30,7 +30,6 @@ public class Tichu extends AbstractGame {
                 players[2].getId(), 2,
                 players[3].getId(), 3
         );
-        this.scores = new int[2];
         this.rounds = new ArrayList<>();
         this.rounds.add(new Round(this));
     }
@@ -69,6 +68,21 @@ public class Tichu extends AbstractGame {
 
     @Locked
     public Round getCurrentRound() {
-        return rounds.get(rounds.size() - 1);
+        return rounds.getLast();
+    }
+
+    public void nextRound() {
+        var scoresHistory = rounds.stream().map(Round::getScores).toList();
+        addEvent(new TichuRoundEndEvent(scoresHistory));
+
+        var redTotalScore = scoresHistory.stream().mapToInt(score -> score[0]).sum();
+        var blueTotalScore = scoresHistory.stream().mapToInt(score -> score[1]).sum();
+        // todo: set max score in rules
+        if (redTotalScore < 1000 && blueTotalScore < 1000) {
+            rounds.add(new Round(this));
+        } else {
+            addEvent(new TichuEndEvent(scoresHistory));
+            // todo: manage room.game in event handler
+        }
     }
 }

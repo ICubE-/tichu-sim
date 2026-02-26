@@ -2,32 +2,35 @@ package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
 import com.icube.sim.tichu.games.tichu.TichuService;
-import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
-import lombok.AllArgsConstructor;
+import com.icube.sim.tichu.games.tichu.dtos.BombSend;
+import com.icube.sim.tichu.games.tichu.exceptions.InvalidBombException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Controller
-public class TichuSmallTichuController {
-    private final TichuService gameService;
+public class TichuPlayBombController {
+    private final TichuService tichuService;
 
-    @MessageMapping("/rooms/{roomId}/game/tichu/small-tichu")
-    public void smallTichu(
+    @MessageMapping("/rooms/{roomId}/game/tichu/play-bomb")
+    public void playBomb(
             @DestinationVariable("roomId") String roomId,
+            @Payload BombSend bombSend,
             Principal principal
     ) {
-        gameService.smallTichu(roomId, principal);
+        tichuService.playBomb(roomId, bombSend, principal);
     }
 
-    @MessageExceptionHandler(InvalidTichuDeclarationException.class)
+    @MessageExceptionHandler(InvalidBombException.class)
     @SendToUser("/queue/errors")
-    public ErrorMessage handleInvalidTichuDeclaration() {
-        return new ErrorMessage("Invalid tichu declaration.");
+    public ErrorMessage handleInvalidBomb() {
+        return new ErrorMessage("Invalid bomb.");
     }
 }

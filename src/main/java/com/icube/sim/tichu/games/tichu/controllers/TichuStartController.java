@@ -1,12 +1,13 @@
 package com.icube.sim.tichu.games.tichu.controllers;
 
 import com.icube.sim.tichu.common.websocket.ErrorMessage;
-import com.icube.sim.tichu.games.common.exceptions.GameHasAlreadyStartedException;
 import com.icube.sim.tichu.games.tichu.TichuService;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.rooms.InvalidMemberCountException;
 import lombok.AllArgsConstructor;
-import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
@@ -24,12 +25,6 @@ public class TichuStartController {
     @SendToUser("/queue/errors")
     public ErrorMessage handleInvalidMemberCount() {
         return new ErrorMessage("Invalid member count.");
-    }
-
-    @MessageExceptionHandler(GameHasAlreadyStartedException.class)
-    @SendToUser("/queue/errors")
-    public ErrorMessage handleGamePlaying() {
-        return new ErrorMessage("Game has already been playing.");
     }
 
     @MessageExceptionHandler(InvalidTeamAssignmentException.class)

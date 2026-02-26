@@ -10,19 +10,14 @@ import java.util.List;
 
 public class CardMapper {
     public CardDto toDto(Card card) {
-        if (card instanceof StandardCard standardCard) {
-            return new CardDto(CardType.STANDARD, standardCard.suit(), standardCard.rank());
-        } else if (card instanceof SparrowCard) {
-            return new CardDto(CardType.SPARROW);
-        } else if (card instanceof PhoenixCard) {
-            return new CardDto(CardType.PHOENIX);
-        } else if (card instanceof DragonCard) {
-            return new CardDto(CardType.DRAGON);
-        } else if (card instanceof DogCard) {
-            return new CardDto(CardType.DOG);
-        } else {
-            throw new IllegalArgumentException("Invalid card type.");
-        }
+        return switch (card) {
+            case StandardCard(CardSuit suit, int rank) -> new CardDto(CardType.STANDARD, suit, rank);
+            case SparrowCard sparrowCard -> new CardDto(CardType.SPARROW);
+            case PhoenixCard phoenixCard -> new CardDto(CardType.PHOENIX);
+            case DragonCard dragonCard -> new CardDto(CardType.DRAGON);
+            case DogCard dogCard -> new CardDto(CardType.DOG);
+            case null, default -> throw new IllegalArgumentException("Invalid card type.");
+        };
     }
 
     public Card toCard(CardDto cardDto) {
