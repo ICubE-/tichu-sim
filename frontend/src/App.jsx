@@ -31,7 +31,6 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/:roomId" element={<RoomDetailPage />} />
-        <Route path="/rooms/:roomId/game" element={<TichuPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

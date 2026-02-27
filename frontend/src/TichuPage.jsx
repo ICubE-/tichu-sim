@@ -5,20 +5,20 @@ import {useAuth} from "./useAuth.jsx";
 import {useAxios} from "./useAxios.jsx";
 import './TichuPage.css';
 
-const TichuPage = () => {
-  const {roomId} = useParams();
-  const navigate = useNavigate();
+const TichuPage = (roomId, stomp, chatMessages) => {
   const {user} = useAuth();
-  const stomp = useStomp();
   const api = useAxios();
 
   const [gameState, setGameState] = useState({
-    players: [], // {id, name, index, cardCount, declaration, passed}
+    rule: null,
+    players: [], // {id, name, index, cardCount, tichuDeclaration, exitOrder, passed}
+    scoresHistory: [],
     hand: [], // My cards
-    trick: null, // {cards: [], playedBy}
-    turnIndex: -1,
-    phase: 'WAITING',
-    scores: []
+    roundStatus: null,
+    wish: null,
+    phaseStatus: null,
+    turn: null,
+    lastTrick: null, // {playerIndex, type, cards}
   });
 
   const [selectedCards, setSelectedCards] = useState([]);
@@ -33,9 +33,31 @@ const TichuPage = () => {
             ...p,
             index: i,
             cardCount: 0,
+            tichuDeclaration: null,
+            exitOrder: 0,
             passed: false
           })),
-          phase: 'DRAWING'
+        }));
+        break;
+      case 'GET':
+        setGameState(prev => ({
+          ...prev,
+          rule: message.rule,
+          players: message.players.map((p, i) => ({
+            ...p,
+            index: i,
+            cardCount: 0,
+            tichuDeclaration: null,
+            exitOrder: 0,
+            passed: false
+          })),
+          scoresHistory: message.scoresHistory,
+          hand: message.myHand,
+          roundStatus: message.roundStatus,
+          wish: message.wish,
+          phaseStatus: message.phaseStatus,
+          turn: message.turn,
+          lastTrick: message.lastTrick,
         }));
         break;
       case 'INIT_FIRST_DRAWS':
@@ -94,17 +116,12 @@ const TichuPage = () => {
   }, [user.id]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
 
     const destination = `/user/${user.id}/queue/game/tichu`;
     stomp.subscribe(destination, handleTichuMessage);
-    api.get('/auth/issue/web-socket-token')
-      .then(response => response.data.token)
-      .then(token => stomp.connect(token));
-
-    return () => {
-      stomp.disconnect();
-    };
   }, [roomId, handleTichuMessage, user]);
 
   const toggleCardSelection = (card) => {

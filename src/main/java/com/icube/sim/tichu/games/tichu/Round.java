@@ -8,10 +8,12 @@ import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationExcepti
 import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
 public class Round {
+    @Getter
     private RoundStatus status;
     private final Tichu game;
     private final List<Card> deck;
@@ -23,14 +25,14 @@ public class Round {
     private Integer wish;
     private final int[] exitOrder;
     // Score order: { RED, BLUE }
-    private int[] scores;
+    private int @Nullable [] scores;
 
     public Round(Tichu game) {
         this.game = game;
-        this.tichuDeclarations = new TichuDeclaration[] { null, null, null, null };
+        this.tichuDeclarations = new TichuDeclaration[]{null, null, null, null};
         this.exchangePhase = new ExchangePhase(game, this);
         this.phases = new ArrayList<>();
-        this.exitOrder = new int[] { 0, 0, 0, 0 };
+        this.exitOrder = new int[]{0, 0, 0, 0};
         this.scores = null;
 
         this.deck = Cards.getDeck();
@@ -171,7 +173,7 @@ public class Round {
         assert scores == null;
 
         status = RoundStatus.FINISHED;
-        scores = new int[] { 0, 0 };
+        scores = new int[]{0, 0};
 
         calcTichuDeclarationScores();
         for (var i = 0; i < 4; i++) {
@@ -197,7 +199,7 @@ public class Round {
         assert scores == null;
 
         status = RoundStatus.FINISHED;
-        scores = new int[] { 0, 0 };
+        scores = new int[]{0, 0};
 
         calcTichuDeclarationScores();
         for (var i = 0; i < 4; i++) {
@@ -218,6 +220,7 @@ public class Round {
     }
 
     private void calcTichuDeclarationScores() {
+        assert scores != null;
         for (var i = 0; i < 4; i++) {
             var teamIndex = i % 2;
             switch (tichuDeclarations[i]) {
@@ -241,7 +244,15 @@ public class Round {
         }
     }
 
+    public TichuDeclaration[] getTichuDeclarations() {
+        return tichuDeclarations.clone();
+    }
+
+    public int[] getExitOrder() {
+        return exitOrder.clone();
+    }
+
     public int[] getScores() {
-        return scores.clone();
+        return scores == null ? null : scores.clone();
     }
 }

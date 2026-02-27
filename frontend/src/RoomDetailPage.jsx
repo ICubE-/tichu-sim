@@ -5,6 +5,7 @@ import { useAuth } from './useAuth.jsx';
 import { useStomp } from "./useStomp.jsx"
 import './RoomDetailPage.css';
 import { useAxios } from "./useAxios.jsx";
+import TichuPage from "./TichuPage.jsx";
 
 const RoomDetailPage = () => {
   const { roomId } = useParams();
@@ -111,7 +112,7 @@ const RoomDetailPage = () => {
     stomp.subscribe(`/topic/rooms/${roomId}/chat`, handleReceiveChatMessage);
     stomp.subscribe(`/user/${user.id}/queue/game/tichu`, (message) => {
       if (message.type === 'START') {
-        navigate(`/rooms/${roomId}/game`);
+        room.hasGameStarted = true;
       }
     });
 
@@ -127,6 +128,10 @@ const RoomDetailPage = () => {
 
   if (loading || room === null) {
     return <div style={{ padding: '20px' }}>Loading...</div>;
+  }
+
+  if (room.hasGameStarted) {
+    return <TichuPage roomId={room.id} stomp={stomp} />
   }
 
   return (

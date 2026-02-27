@@ -5,11 +5,14 @@ import com.icube.sim.tichu.games.tichu.events.TichuEndEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuStartEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuRoundEndEvent;
 import com.icube.sim.tichu.rooms.Member;
+import lombok.Getter;
 import lombok.Locked;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Tichu extends AbstractGame {
+    @Getter
     private final TichuRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;
@@ -66,13 +69,14 @@ public class Tichu extends AbstractGame {
         return players;
     }
 
+    // todo: manage lock in different way
     @Locked
     public Round getCurrentRound() {
         return rounds.getLast();
     }
 
     public void nextRound() {
-        var scoresHistory = rounds.stream().map(Round::getScores).toList();
+        var scoresHistory = getScoresHistory();
         addEvent(new TichuRoundEndEvent(scoresHistory));
 
         var redTotalScore = scoresHistory.stream().mapToInt(score -> score[0]).sum();
@@ -82,7 +86,14 @@ public class Tichu extends AbstractGame {
             rounds.add(new Round(this));
         } else {
             addEvent(new TichuEndEvent(scoresHistory));
-            // todo: manage room.game in event handler
         }
+    }
+
+    public List<int[]> getScoresHistory() {
+        var scoresHistory = rounds.stream().map(Round::getScores).collect(Collectors.toList());
+        if (scoresHistory.getLast() == null) {
+            scoresHistory.removeLast();
+        }
+        return scoresHistory;
     }
 }
