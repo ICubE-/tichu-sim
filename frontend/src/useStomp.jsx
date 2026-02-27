@@ -66,5 +66,5 @@ export const useStomp = () => {
     });
   };
 
-  return {client, connect, disconnect, subscribe, publish};
+  return {client, connect, disconnect, subscribe, unsubscribe, publish};
 };

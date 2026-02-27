@@ -1,14 +1,15 @@
-import React, {useEffect, useState} from 'react';
-import {useParams, useNavigate} from 'react-router-dom';
-import {useRoom} from "./useRoom.jsx";
-import {useStomp} from "./useStomp.jsx"
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useRoom } from "./useRoom.jsx";
+import { useAuth } from './useAuth.jsx';
+import { useStomp } from "./useStomp.jsx"
 import './RoomDetailPage.css';
-import {useAxios} from "./useAxios.jsx";
+import { useAxios } from "./useAxios.jsx";
 
 const RoomDetailPage = () => {
-  const {roomId} = useParams();
+  const { roomId } = useParams();
   const navigate = useNavigate();
-  const {fetchMyRoom, enterRoom, leaveRoom, fetchRoom} = useRoom();
+  const { fetchMyRoom, enterRoom, leaveRoom, fetchRoom } = useRoom();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const stomp = useStomp();
@@ -101,17 +102,31 @@ const RoomDetailPage = () => {
     }
   };
 
+  const { user } = useAuth();
+
   useEffect(() => {
+    if (!user) return;
+
     stomp.subscribe(`/topic/rooms/${roomId}/members`, handleMemberChange);
     stomp.subscribe(`/topic/rooms/${roomId}/chat`, handleReceiveChatMessage);
+    stomp.subscribe(`/user/${user.id}/queue/game/tichu`, (message) => {
+      if (message.type === 'START') {
+        navigate(`/rooms/${roomId}/game`);
+      }
+    });
+
+    stomp.subscribe(`/user/${user.id}/queue/errors`, (error) => {
+      alert(`Error: ${error.message || 'Unknown error'}`);
+    });
+
     api.get('/auth/issue/web-socket-token')
       .then(response => response.data.token)
       .then(token => stomp.connect(token));
     return stomp.disconnect;
-  }, [roomId]);
+  }, [roomId, user]);
 
   if (loading || room === null) {
-    return <div style={{padding: '20px'}}>Loading...</div>;
+    return <div style={{ padding: '20px' }}>Loading...</div>;
   }
 
   return (
@@ -138,6 +153,21 @@ const RoomDetailPage = () => {
             <h3>Rules</h3>
             <div className="rule-box">
               <p>TODO</p>
+              <button
+                onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/start`, {})}
+                className="start-button"
+                style={{
+                  marginTop: '10px',
+                  padding: '10px 20px',
+                  background: '#4facfe',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                Start Tichu Game
+              </button>
               {<pre>{JSON.stringify(room.gameRule, null, 2)}</pre>}
             </div>
           </div>

@@ -1,14 +1,15 @@
 import React from 'react';
-import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
-import {AuthProvider, useAuth} from './useAuth.jsx';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './useAuth.jsx';
 import LoginPage from './LoginPage';
 import NavBar from "./NavBar";
 import HomePage from './HomePage';
 import RoomDetailPage from './RoomDetailPage';
+import TichuPage from './TichuPage';
 import './App.css';
 
 const AppContent = () => {
-  const {ready: authReady, accessToken} = useAuth();
+  const { ready: authReady, accessToken } = useAuth();
   if (!authReady) {
     return <div>Authenticating...</div>;
   }
@@ -17,8 +18,8 @@ const AppContent = () => {
     return (
       <div className="container">
         <Routes>
-          <Route path="/" element={<LoginPage/>}/>
-          <Route path="*" element={<Navigate to="/" replace/>}/>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     );
@@ -26,11 +27,12 @@ const AppContent = () => {
 
   return (
     <div className="container">
-      <NavBar/>
+      <NavBar />
       <Routes>
-        <Route path="/" element={<HomePage/>}/>
-        <Route path="/:roomId" element={<RoomDetailPage/>}/>
-        <Route path="*" element={<Navigate to="/" replace/>}/>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/:roomId" element={<RoomDetailPage />} />
+        <Route path="/rooms/:roomId/game" element={<TichuPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
@@ -40,7 +42,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent/>
+        <AppContent />
       </AuthProvider>
     </BrowserRouter>
   );
