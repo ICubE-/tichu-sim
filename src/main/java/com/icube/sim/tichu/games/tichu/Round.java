@@ -131,9 +131,9 @@ public class Round {
         assert status == RoundStatus.PLAYING;
 
         var playerIndex = firstPlayerIndex;
-        do {
+        while (isPlayerExited(playerIndex)) {
             playerIndex = (playerIndex + 1) % 4;
-        } while (isPlayerExited(playerIndex));
+        }
 
         phases.add(new Phase(game, this, playerIndex));
     }
