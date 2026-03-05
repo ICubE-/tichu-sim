@@ -8,6 +8,7 @@ import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationExcepti
 import com.icube.sim.tichu.games.common.exceptions.InvalidTimeOfActionException;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ public class Round {
     private Integer wish;
     private final int[] exitOrder;
     // Score order: { RED, BLUE }
-    private int[] scores;
+    private int @Nullable [] scores;
 
     public Round(Tichu game) {
         this.game = game;
@@ -218,6 +219,7 @@ public class Round {
     }
 
     private void calcTichuDeclarationScores() {
+        assert scores != null;
         for (var i = 0; i < 4; i++) {
             var teamIndex = i % 2;
             switch (tichuDeclarations[i]) {
@@ -242,6 +244,6 @@ public class Round {
     }
 
     public int[] getScores() {
-        return scores.clone();
+        return scores == null ? null : scores.clone();
     }
 }
