@@ -65,12 +65,13 @@ public class TrickBuilder {
                 trickType = TrickType.THREE_OF_A_KIND;
             }
             return trickType;
-        } else if (cards.size() == 4) {
-            if (FourOfAKindTrick.isFourOfAKindTrick(cards)) {
-                trickType = TrickType.FOUR_OF_A_KIND;
-            }
-            return trickType;
         } else {
+            if (cards.size() == 4) {
+                if (FourOfAKindTrick.isFourOfAKindTrick(cards)) {
+                    trickType = TrickType.FOUR_OF_A_KIND;
+                    return trickType;
+                }
+            }
             if (cards.size() == 5) {
                 if (FullHouseTrick.isFullHouseTrick(cards)) {
                     trickType = TrickType.FULL_HOUSE;
