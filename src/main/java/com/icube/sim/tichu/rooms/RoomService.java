@@ -103,12 +103,12 @@ public class RoomService {
 
     private void notifyEnter(String roomId, Long userId, String userName) {
         var chatMessage = MemberMessage.enter(userId, userName);
-        messagingTemplate.convertAndSend("/api/ws/topic/rooms/" + roomId + "/members", chatMessage);
+        messagingTemplate.convertAndSend("/topic/rooms/" + roomId + "/members", chatMessage);
     }
 
     private void notifyLeave(String roomId, Long userId, String userName) {
         var chatMessage = MemberMessage.leave(userId, userName);
-        messagingTemplate.convertAndSend("/api/ws/topic/rooms/" + roomId + "/members", chatMessage);
+        messagingTemplate.convertAndSend("/topic/rooms/" + roomId + "/members", chatMessage);
     }
 
     private static String generateRandomAlphabetString(int length) {
