@@ -6,12 +6,14 @@ import com.icube.sim.tichu.games.tichu.events.TichuStartEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuRoundEndEvent;
 import com.icube.sim.tichu.rooms.Member;
 import lombok.Getter;
-import lombok.Locked;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class Tichu extends AbstractGame {
+    private final Lock lock;
     @Getter
     private final TichuRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
@@ -25,6 +27,7 @@ public class Tichu extends AbstractGame {
 
     private Tichu(TichuRule rule, Player[] players) {
         super(new TichuStartEvent(players));
+        this.lock = new ReentrantLock();
         this.rule = rule;
         this.players = players;
         this.playerIndexById = Map.of(
@@ -35,6 +38,14 @@ public class Tichu extends AbstractGame {
         );
         this.rounds = new ArrayList<>();
         this.rounds.add(new Round(this));
+    }
+
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
     }
 
     public Player getPlayer(int index) {
@@ -69,7 +80,6 @@ public class Tichu extends AbstractGame {
         return players;
     }
 
-    @Locked
     public Round getCurrentRound() {
         return rounds.getLast();
     }
