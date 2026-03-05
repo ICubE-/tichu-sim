@@ -88,18 +88,24 @@ public class TichuService extends AbstractGameService {
                 cardMapper.toCards(trickSend.getCards()),
                 trickSend.getWish()
         );
+
+        publishQueuedEvents(game, roomId);
     }
 
     public void playBomb(String roomId, BombSend bombSend, Principal principal) {
         var game = getGame(roomId);
         var phase = game.getCurrentRound().getCurrentPhase();
         phase.playBomb(getPlayerId(principal), cardMapper.toCards(bombSend.getCards()));
+
+        publishQueuedEvents(game, roomId);
     }
 
     public void pass(String roomId, Principal principal) {
         var game = getGame(roomId);
         var phase = game.getCurrentRound().getCurrentPhase();
         phase.pass(getPlayerId(principal));
+
+        publishQueuedEvents(game, roomId);
     }
 
     public void selectDragonReceiver(
@@ -110,6 +116,8 @@ public class TichuService extends AbstractGameService {
         var game = getGame(roomId);
         var phase = game.getCurrentRound().getCurrentPhase();
         phase.selectDragonReceiver(getPlayerId(principal), selectDragonReceiverSend.getGiveRight());
+
+        publishQueuedEvents(game, roomId);
     }
 
     @Override
