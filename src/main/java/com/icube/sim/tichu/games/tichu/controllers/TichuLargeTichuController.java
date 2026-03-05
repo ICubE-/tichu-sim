@@ -17,7 +17,7 @@ import java.security.Principal;
 @AllArgsConstructor
 @Controller
 public class TichuLargeTichuController {
-    private final TichuService gameService;
+    private final TichuService tichuService;
 
     @MessageMapping("/rooms/{roomId}/game/tichu/large-tichu")
     public void largeTichu(
@@ -25,7 +25,7 @@ public class TichuLargeTichuController {
             @Payload LargeTichuSend largeTichuSend,
             Principal principal
     ) {
-        gameService.largeTichu(roomId, largeTichuSend, principal);
+        tichuService.largeTichu(roomId, largeTichuSend, principal);
     }
 
     @MessageExceptionHandler(InvalidTichuDeclarationException.class)

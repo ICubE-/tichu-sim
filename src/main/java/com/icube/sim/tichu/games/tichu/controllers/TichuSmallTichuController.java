@@ -15,14 +15,14 @@ import java.security.Principal;
 @AllArgsConstructor
 @Controller
 public class TichuSmallTichuController {
-    private final TichuService gameService;
+    private final TichuService tichuService;
 
     @MessageMapping("/rooms/{roomId}/game/tichu/small-tichu")
     public void smallTichu(
             @DestinationVariable("roomId") String roomId,
             Principal principal
     ) {
-        gameService.smallTichu(roomId, principal);
+        tichuService.smallTichu(roomId, principal);
     }
 
     @MessageExceptionHandler(InvalidTichuDeclarationException.class)

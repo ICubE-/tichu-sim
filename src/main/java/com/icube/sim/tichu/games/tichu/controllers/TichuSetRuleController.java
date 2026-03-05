@@ -15,11 +15,11 @@ import org.springframework.stereotype.Controller;
 @AllArgsConstructor
 @Controller
 public class TichuSetRuleController {
-    private final TichuService gameService;
+    private final TichuService tichuService;
 
     @MessageMapping("/rooms/{roomId}/game/tichu/set-rule")
     public void setRule(@DestinationVariable("roomId") String roomId, @Payload TichuRule rule) {
-        gameService.setRule(roomId, rule);
+        tichuService.setRule(roomId, rule);
     }
 
     @MessageExceptionHandler(InvalidTeamAssignmentException.class)

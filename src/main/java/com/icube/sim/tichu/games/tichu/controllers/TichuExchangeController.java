@@ -17,7 +17,7 @@ import java.security.Principal;
 @AllArgsConstructor
 @Controller
 public class TichuExchangeController {
-    private final TichuService gameService;
+    private final TichuService tichuService;
 
     @MessageMapping("/rooms/{roomId}/game/tichu/exchange")
     public void exchange(
@@ -25,7 +25,7 @@ public class TichuExchangeController {
             @Payload ExchangeSend exchangeSend,
             Principal principal
     ) {
-        gameService.exchange(roomId, exchangeSend, principal);
+        tichuService.exchange(roomId, exchangeSend, principal);
     }
 
     @MessageExceptionHandler(InvalidExchangeException.class)
