@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.*;
 
 public class Round {
+    @Getter
     private RoundStatus status;
     private final Tichu game;
     private final List<Card> deck;
@@ -241,6 +242,14 @@ public class Round {
                 }
             }
         }
+    }
+
+    public TichuDeclaration[] getTichuDeclarations() {
+        return tichuDeclarations.clone();
+    }
+
+    public int[] getExitOrder() {
+        return exitOrder.clone();
     }
 
     public int[] getScores() {

@@ -5,12 +5,14 @@ import com.icube.sim.tichu.games.tichu.events.TichuEndEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuStartEvent;
 import com.icube.sim.tichu.games.tichu.events.TichuRoundEndEvent;
 import com.icube.sim.tichu.rooms.Member;
+import lombok.Getter;
 import lombok.Locked;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Tichu extends AbstractGame {
+    @Getter
     private final TichuRule rule;
     // Player order: { RED, BLUE, RED, BLUE }
     private final Player[] players;

@@ -9,6 +9,7 @@ import com.icube.sim.tichu.games.tichu.events.TichuSetRuleEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
 import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
+import com.icube.sim.tichu.games.tichu.mappers.TichuMapper;
 import com.icube.sim.tichu.rooms.Room;
 import com.icube.sim.tichu.rooms.RoomRepository;
 import org.jspecify.annotations.NonNull;
@@ -19,10 +20,12 @@ import java.security.Principal;
 
 @Service
 public class TichuService extends AbstractGameService {
+    private final TichuMapper tichuMapper;
     private final CardMapper cardMapper;
 
     public TichuService(RoomRepository roomRepository, ApplicationEventPublisher eventPublisher) {
         super(roomRepository, eventPublisher);
+        tichuMapper = new TichuMapper();
         cardMapper = new CardMapper();
     }
 
@@ -44,6 +47,10 @@ public class TichuService extends AbstractGameService {
     @Override
     protected void postStart(Game game, Room room) {
         // Empty
+    }
+
+    public TichuDto get(String roomId, Principal principal) {
+        return tichuMapper.toDto(getGame(roomId), getPlayerId(principal));
     }
 
     public void largeTichu(String roomId, LargeTichuSend largeTichuSend, Principal principal) {

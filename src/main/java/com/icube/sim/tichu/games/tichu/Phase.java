@@ -7,15 +7,18 @@ import com.icube.sim.tichu.games.tichu.exceptions.InvalidBombException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidPassException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTrickException;
 import com.icube.sim.tichu.games.tichu.tricks.*;
+import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Phase {
+    @Getter
     private PhaseStatus status;
     private final Tichu game;
     private final Round round;
+    @Getter
     private int turn;
     private final List<Trick> tricks;
 
@@ -230,5 +233,9 @@ public class Phase {
 
         status = PhaseStatus.FINISHED;
         round.nextPhase(playerIndex);
+    }
+
+    public Trick getLastTrick() {
+        return tricks.isEmpty() ? null : tricks.getLast();
     }
 }
