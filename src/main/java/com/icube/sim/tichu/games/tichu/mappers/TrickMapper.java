@@ -7,6 +7,6 @@ public class TrickMapper {
     private final CardMapper cardMapper = new CardMapper();
 
     public TrickDto toDto(Trick trick) {
-        return new TrickDto(trick.getType(), cardMapper.toDtos(trick.getCards()));
+        return new TrickDto(trick.getPlayerIndex(), trick.getType(), cardMapper.toDtos(trick.getCards()));
     }
 }

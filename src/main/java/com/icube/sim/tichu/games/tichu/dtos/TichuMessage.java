@@ -71,7 +71,12 @@ public class TichuMessage {
     public static TichuMessage roundEnd(List<int[]> scoresHistory) {
         return new TichuMessage(TichuMessageType.ROUND_END, scoresHistory);
     }
+
     public static TichuMessage end(List<int[]> scoresHistory) {
         return new TichuMessage(TichuMessageType.END, scoresHistory);
+    }
+
+    public static TichuMessage get(TichuDto tichuDto) {
+        return new TichuMessage(TichuMessageType.GET, tichuDto);
     }
 }

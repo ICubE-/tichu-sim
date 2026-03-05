@@ -1,8 +1,8 @@
-import {Client} from "@stomp/stompjs";
-import {useMemo, useRef} from "react";
+import { Client } from "@stomp/stompjs";
+import { useMemo, useRef } from "react";
 
 export const useStomp = () => {
-  const subscriptions = useRef({});
+  const subscriptions = useRef([]);
 
   const client = useMemo(() => new Client({
     brokerURL: `${window.location.origin.replace('http', 'ws')}/api/ws`,
@@ -16,14 +16,14 @@ export const useStomp = () => {
   }), []);
 
   client.onConnect = (frame) => {
-    for (const [dest, sub] of Object.entries(subscriptions.current)) {
-      sub.subscription = client.subscribe(
-        dest,
+    subscriptions.current.forEach(entry => {
+      entry.stompSubscription = client.subscribe(
+        entry.destination,
         (message) => {
-          sub.callback(JSON.parse(message.body))
+          entry.callback(JSON.parse(message.body))
         }
-      )
-    }
+      );
+    });
   }
 
   const connect = (token) => {
@@ -38,12 +38,10 @@ export const useStomp = () => {
   };
 
   const subscribe = (destination, callback) => {
-    if (subscriptions.current[destination]?.subscription) {
-      subscriptions.current[destination]?.subscription.unsubscribe();
-    }
-    subscriptions.current[destination] = {
-      callback: callback,
-      subscription: !client.active ?
+    const entry = {
+      destination,
+      callback,
+      stompSubscription: !client.active ?
         null :
         client.subscribe(
           destination,
@@ -52,11 +50,19 @@ export const useStomp = () => {
           }
         )
     };
+    subscriptions.current.push(entry);
   };
 
-  const unsubscribe = (destination) => {
-    subscriptions.current[destination]?.subscription.unsubscribe();
-    delete subscriptions.current[destination];
+  const unsubscribe = (destination, callback) => {
+    const index = subscriptions.current.findIndex(
+      entry => entry.destination === destination && entry.callback === callback
+    );
+
+    if (index !== -1) {
+      const entry = subscriptions.current[index];
+      entry.stompSubscription?.unsubscribe();
+      subscriptions.current.splice(index, 1);
+    }
   };
 
   const publish = (destination, message) => {
@@ -66,5 +72,5 @@ export const useStomp = () => {
     });
   };
 
-  return {client, connect, disconnect, subscribe, publish};
+  return { connect, disconnect, subscribe, unsubscribe, publish };
 };

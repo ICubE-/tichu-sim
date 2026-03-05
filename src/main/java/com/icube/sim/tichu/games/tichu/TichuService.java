@@ -9,6 +9,7 @@ import com.icube.sim.tichu.games.tichu.events.TichuSetRuleEvent;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTeamAssignmentException;
 import com.icube.sim.tichu.games.tichu.exceptions.InvalidTichuDeclarationException;
 import com.icube.sim.tichu.games.tichu.mappers.CardMapper;
+import com.icube.sim.tichu.games.tichu.mappers.TichuMapper;
 import com.icube.sim.tichu.rooms.Room;
 import com.icube.sim.tichu.rooms.RoomRepository;
 import org.jspecify.annotations.NonNull;
@@ -16,13 +17,17 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Service
 public class TichuService extends AbstractGameService {
+    private final TichuMapper tichuMapper;
     private final CardMapper cardMapper;
 
     public TichuService(RoomRepository roomRepository, ApplicationEventPublisher eventPublisher) {
         super(roomRepository, eventPublisher);
+        tichuMapper = new TichuMapper();
         cardMapper = new CardMapper();
     }
 
@@ -46,60 +51,62 @@ public class TichuService extends AbstractGameService {
         // Empty
     }
 
+    public TichuDto get(String roomId, Principal principal) {
+        return withLock(roomId, game -> tichuMapper.toDto(game, getPlayerId(principal)));
+    }
+
     public void largeTichu(String roomId, LargeTichuSend largeTichuSend, Principal principal) {
         var isLargeTichuDeclared = largeTichuSend.getIsLargeTichuDeclared();
         if (isLargeTichuDeclared == null) {
             throw new InvalidTichuDeclarationException();
         }
 
-        var game = getGame(roomId);
-        var round = game.getCurrentRound();
-        round.largeTichu(getPlayerId(principal), isLargeTichuDeclared);
-
-        publishQueuedEvents(game, roomId);
+        withLockAndPublish(roomId, game -> {
+            var round = game.getCurrentRound();
+            round.largeTichu(getPlayerId(principal), isLargeTichuDeclared);
+        });
     }
 
     public void smallTichu(String roomId, Principal principal) {
-        var game = getGame(roomId);
-        var round = game.getCurrentRound();
-        round.smallTichu(getPlayerId(principal));
-
-        publishQueuedEvents(game, roomId);
+        withLockAndPublish(roomId, game -> {
+            var round = game.getCurrentRound();
+            round.smallTichu(getPlayerId(principal));
+        });
     }
 
     public void exchange(String roomId, ExchangeSend exchangeSend, Principal principal) {
-        var game = getGame(roomId);
-        var exchangePhase = game.getCurrentRound().getExchangePhase();
-        exchangePhase.queueExchange(
-                getPlayerId(principal),
-                cardMapper.toCardNullable(exchangeSend.getLeft()),
-                cardMapper.toCardNullable(exchangeSend.getMid()),
-                cardMapper.toCardNullable(exchangeSend.getRight())
-        );
-
-        publishQueuedEvents(game, roomId);
+        withLockAndPublish(roomId, game -> {
+            var exchangePhase = game.getCurrentRound().getExchangePhase();
+            exchangePhase.queueExchange(
+                    getPlayerId(principal),
+                    cardMapper.toCardNullable(exchangeSend.getLeft()),
+                    cardMapper.toCardNullable(exchangeSend.getMid()),
+                    cardMapper.toCardNullable(exchangeSend.getRight()));
+        });
     }
 
     public void playTrick(String roomId, TrickSend trickSend, Principal principal) {
-        var game = getGame(roomId);
-        var phase = game.getCurrentRound().getCurrentPhase();
-        phase.playTrick(
-                getPlayerId(principal),
-                cardMapper.toCards(trickSend.getCards()),
-                trickSend.getWish()
-        );
+        withLockAndPublish(roomId, game -> {
+            var phase = game.getCurrentRound().getCurrentPhase();
+            phase.playTrick(
+                    getPlayerId(principal),
+                    cardMapper.toCards(trickSend.getCards()),
+                    trickSend.getWish());
+        });
     }
 
     public void playBomb(String roomId, BombSend bombSend, Principal principal) {
-        var game = getGame(roomId);
-        var phase = game.getCurrentRound().getCurrentPhase();
-        phase.playBomb(getPlayerId(principal), cardMapper.toCards(bombSend.getCards()));
+        withLockAndPublish(roomId, game -> {
+            var phase = game.getCurrentRound().getCurrentPhase();
+            phase.playBomb(getPlayerId(principal), cardMapper.toCards(bombSend.getCards()));
+        });
     }
 
     public void pass(String roomId, Principal principal) {
-        var game = getGame(roomId);
-        var phase = game.getCurrentRound().getCurrentPhase();
-        phase.pass(getPlayerId(principal));
+        withLockAndPublish(roomId, game -> {
+            var phase = game.getCurrentRound().getCurrentPhase();
+            phase.pass(getPlayerId(principal));
+        });
     }
 
     public void selectDragonReceiver(
@@ -107,9 +114,31 @@ public class TichuService extends AbstractGameService {
             SelectDragonReceiverSend selectDragonReceiverSend,
             Principal principal
     ) {
+        withLockAndPublish(roomId, game -> {
+            var phase = game.getCurrentRound().getCurrentPhase();
+            phase.selectDragonReceiver(getPlayerId(principal), selectDragonReceiverSend.getGiveRight());
+        });
+    }
+
+    private <T> T withLock(String roomId, Function<Tichu, T> action) {
         var game = getGame(roomId);
-        var phase = game.getCurrentRound().getCurrentPhase();
-        phase.selectDragonReceiver(getPlayerId(principal), selectDragonReceiverSend.getGiveRight());
+        game.lock();
+        try {
+            return action.apply(game);
+        } finally {
+            game.unlock();
+        }
+    }
+
+    private void withLockAndPublish(String roomId, Consumer<Tichu> action) {
+        var game = getGame(roomId);
+        game.lock();
+        try {
+            action.accept(game);
+            publishQueuedEvents(game, roomId);
+        } finally {
+            game.unlock();
+        }
     }
 
     @Override

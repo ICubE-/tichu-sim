@@ -16,4 +16,5 @@ public enum TichuMessageType {
     SELECT_DRAGON_RECEIVER,
     ROUND_END,
     END,
+    GET,
 }

@@ -14,11 +14,11 @@ import org.springframework.stereotype.Controller;
 @AllArgsConstructor
 @Controller
 public class TichuStartController {
-    private final TichuService gameService;
+    private final TichuService tichuService;
 
     @MessageMapping("/rooms/{roomId}/game/tichu/start")
     public void start(@DestinationVariable("roomId") String roomId) {
-        gameService.start(roomId);
+        tichuService.start(roomId);
     }
 
     @MessageExceptionHandler(InvalidMemberCountException.class)
