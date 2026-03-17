@@ -23,28 +23,19 @@ public class FullHouseTrick extends Trick {
         isPhoenixUsed = Cards.containsPhoenix(cards);
         var standardCards = Cards.sortedCards(Cards.extractStandardCards(cards));
         if (isPhoenixUsed) {
-            var isSparrowUsed = Cards.containsSparrow(cards);
-            if (isSparrowUsed) {
-                // e.g. P1222
-                assert standardCards.size() == 3;
+            assert standardCards.size() == 4;
+            // Reject 2222P
+            assert standardCards.get(0).rank() != standardCards.get(3).rank();
+            if (standardCards.get(0).rank() == standardCards.get(2).rank()) {
+                // e.g. 2223P
                 assert standardCards.get(0).rank() == standardCards.get(1).rank();
-                assert standardCards.get(1).rank() == standardCards.get(2).rank();
                 rank = standardCards.get(0).rank();
             } else {
-                assert standardCards.size() == 4;
-                // Reject 2222P
-                assert standardCards.get(0).rank() != standardCards.get(3).rank();
-                if (standardCards.get(0).rank() == standardCards.get(2).rank()) {
-                    // e.g. 2223P
-                    assert standardCards.get(0).rank() == standardCards.get(1).rank();
-                    rank = standardCards.get(0).rank();
-                } else {
-                    // e.g. 2233P or P2333
-                    assert standardCards.get(2).rank() == standardCards.get(3).rank();
-                    assert standardCards.get(0).rank() == standardCards.get(1).rank() ||
-                            standardCards.get(1).rank() == standardCards.get(2).rank();
-                    rank = standardCards.get(3).rank();
-                }
+                // e.g. 2233P or P2333
+                assert standardCards.get(2).rank() == standardCards.get(3).rank();
+                assert standardCards.get(0).rank() == standardCards.get(1).rank() ||
+                        standardCards.get(1).rank() == standardCards.get(2).rank();
+                rank = standardCards.get(3).rank();
             }
         } else {
             assert standardCards.size() == 5;
@@ -73,27 +64,21 @@ public class FullHouseTrick extends Trick {
 
         var standardCards = Cards.sortedCards(Cards.extractStandardCards(cards));
         if (Cards.containsPhoenix(cards)) {
-            if (Cards.containsSparrow(cards)) {
-                // e.g. P1222
-                return standardCards.size() == 3
-                        && standardCards.get(0).rank() == standardCards.get(1).rank()
-                        && standardCards.get(1).rank() == standardCards.get(2).rank();
-            } else {
-                // Reject 2222P
-                if (standardCards.size() != 4 || standardCards.get(0).rank() == standardCards.get(3).rank()) {
-                    return false;
-                }
-
-                // e.g. 2223P
-                return standardCards.get(0).rank() == standardCards.get(1).rank()
-                        && standardCards.get(1).rank() == standardCards.get(2).rank()
-                        // e.g. 2233P
-                        || standardCards.get(0).rank() == standardCards.get(1).rank()
-                        && standardCards.get(2).rank() == standardCards.get(3).rank()
-                        // e.g. P2333
-                        || standardCards.get(1).rank() == standardCards.get(2).rank()
-                        && standardCards.get(2).rank() == standardCards.get(3).rank();
+            // Reject 2222P
+            if (standardCards.size() != 4 || standardCards.get(0).rank() == standardCards.get(3).rank()) {
+                return false;
             }
+
+            // e.g. 2223P
+            return standardCards.get(0).rank() == standardCards.get(1).rank()
+                    && standardCards.get(1).rank() == standardCards.get(2).rank()
+                    // e.g. 2233P
+                    || standardCards.get(0).rank() == standardCards.get(1).rank()
+                    && standardCards.get(2).rank() == standardCards.get(3).rank()
+                    // e.g. P2333
+                    || standardCards.get(1).rank() == standardCards.get(2).rank()
+                    && standardCards.get(2).rank() == standardCards.get(3).rank();
+
         } else {
             return standardCards.size() == 5
                     && standardCards.get(0).rank() == standardCards.get(1).rank()
@@ -124,9 +109,6 @@ public class FullHouseTrick extends Trick {
     private static boolean canPlayWishCard(int wish, List<Card> hand, FullHouseTrick prevTrick) {
         var cardCounts = Cards.extractStandardCards(hand).stream()
                 .collect(Collectors.groupingBy(StandardCard::rank, Collectors.counting()));
-        if (Cards.containsSparrow(hand)) {
-            cardCounts.put(1, 1L);
-        }
         var hasPhoenix = Cards.containsPhoenix(hand);
         long wishCount = cardCounts.getOrDefault(wish, 0L);
 

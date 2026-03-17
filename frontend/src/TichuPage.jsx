@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from "./useAuth.jsx";
-import { areCardsEqual, includesCard, excludeCards } from './utils/cardUtils.js';
+import {
+  areCardsEqual,
+  includesCard,
+  excludeCards,
+  CardType,
+} from './utils/cardUtils.js';
+import { identifyTrick, appendTrickInfo, canCoverUp, canSatisfyWish, TrickType, isBomb } from './utils/trickUtils.js';
 import './TichuPage.css';
 
 const ScoreModal = ({ scoresHistory, players, type, onClose }) => {
@@ -49,6 +55,39 @@ const ScoreModal = ({ scoresHistory, players, type, onClose }) => {
   );
 };
 
+const WishModal = ({ onSelect, onClose }) => {
+  const ranks = [
+    { label: '2', value: 2 }, { label: '3', value: 3 }, { label: '4', value: 4 },
+    { label: '5', value: 5 }, { label: '6', value: 6 }, { label: '7', value: 7 },
+    { label: '8', value: 8 }, { label: '9', value: 9 }, { label: '10', value: 10 },
+    { label: 'J', value: 11 }, { label: 'Q', value: 12 }, { label: 'K', value: 13 },
+    { label: 'A', value: 14 }
+  ];
+
+  return (
+    <div className="wish-modal-overlay">
+      <div className="wish-modal-content">
+        <h2>Make a Wish</h2>
+        <p>Choose a rank to wish for</p>
+        <div className="wish-grid">
+          {ranks.map(r => (
+            <button
+              key={r.value}
+              className="btn-wish"
+              onClick={() => onSelect(r.value)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <button className="btn-no-wish" onClick={() => onSelect(null)}>
+          No Wish
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const TichuPage = ({ roomId, stomp, chatMessages }) => {
   const { user } = useAuth();
 
@@ -61,12 +100,13 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     wish: null,
     phaseStatus: null,
     turn: null,
-    lastTrick: null, // {playerIndex, type, cards}
+    tricks: [], // {playerIndex, type, cards}
   });
 
   const [selectedCards, setSelectedCards] = useState([]);
   const [exchangeSelection, setExchangeSelection] = useState({ left: null, mid: null, right: null });
   const [scoreModalType, setScoreModalType] = useState(null); // null, 'ROUND_END', 'END'
+  const [isWishModalOpen, setIsWishModalOpen] = useState(false);
 
   const handleTichuMessage = useCallback((message) => {
     console.log('Tichu Message:', message);
@@ -75,7 +115,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       case 'START':
         setGameState(prev => ({
           ...prev,
-          players: data.players.map((p, i) => ({
+          players: data.map((p, i) => ({
             ...p,
             index: i,
             cardCount: 0,
@@ -102,10 +142,11 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           wish: data.wish,
           phaseStatus: data.phaseStatus,
           turn: data.turn,
-          lastTrick: data.lastTrick,
+          tricks: data.tricks === null ? [] : data.tricks,
         });
         break;
       case 'INIT_FIRST_DRAWS':
+        setSelectedCards([]);
         setGameState(prev => ({
           ...prev,
           hand: data,
@@ -120,7 +161,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           wish: null,
           phaseStatus: null,
           turn: null,
-          lastTrick: null,
+          tricks: [],
         }));
         break;
       case 'LARGE_TICHU':
@@ -168,7 +209,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           players: prev.players.map(p => ({ ...p, passed: false })),
           phaseStatus: 'PLAYING',
           turn: data,
-          lastTrick: null,
+          tricks: [],
         }));
         break;
       case 'PLAY_TRICK':
@@ -208,7 +249,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             hand: newHand,
             wish: newWish,
             turn: newTurn,
-            lastTrick: data.trick,
+            tricks: [...prev.tricks, data.trick],
           };
         });
         break;
@@ -222,7 +263,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
               ? null
               : prev.wish)
             : null;
-          let newTurn = (prev.turn + 1) % 4;
+          let newTurn = (prev.players.findIndex(p => p.id === data.playerId) + 1) % 4;
           while (prev.players[newTurn].exitOrder !== 0) {
             newTurn = (newTurn + 1) % 4;
           }
@@ -247,7 +288,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             hand: newHand,
             wish: newWish,
             turn: newTurn,
-            lastTrick: data.bomb,
+            tricks: [...prev.tricks, data.bomb],
           };
         });
         break;
@@ -321,13 +362,51 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
 
   const handlePlayTrick = () => {
     if (selectedCards.length === 0) return;
+
+    if (gameState.wish) {
+      const lastTrick = getLastTrick();
+      const canSatisfy = canSatisfyWish(gameState.hand, gameState.wish, lastTrick);
+      const satisfiesNow = selectedCards.some(card => card.rank === gameState.wish);
+
+      if (canSatisfy && !satisfiesNow) {
+        alert(`You must satisfy the wish (${formatRank(gameState.wish)}) if you can!`);
+        return;
+      }
+    }
+
+    const hasSparrow = selectedCards.some(card => card.type === CardType.SPARROW);
+    if (hasSparrow) {
+      setIsWishModalOpen(true);
+    } else {
+      executePlayTrick(null);
+    }
+  };
+
+  const executePlayTrick = (wish) => {
     stomp.publish(`/app/rooms/${roomId}/game/tichu/play-trick`, {
+      cards: selectedCards,
+      wish: wish,
+    });
+    setSelectedCards([]);
+    setIsWishModalOpen(false);
+  };
+
+  const handlePlayBomb = () => {
+    if (selectedCards.length === 0) return;
+    stomp.publish(`/app/rooms/${roomId}/game/tichu/play-bomb`, {
       cards: selectedCards
     });
     setSelectedCards([]);
   };
 
   const handlePass = () => {
+    if (gameState.wish) {
+      const lastTrick = getLastTrick();
+      if (canSatisfyWish(gameState.hand, gameState.wish, lastTrick)) {
+        alert(`You must satisfy the wish (${formatRank(gameState.wish)}) if you can! You cannot pass.`);
+        return;
+      }
+    }
     stomp.publish(`/app/rooms/${roomId}/game/tichu/pass`, {});
   };
 
@@ -356,6 +435,64 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       giveRight: giveRight
     });
   };
+
+  const getLastTrick = () => {
+    if (gameState.tricks.length === 0) {
+      return null;
+    } else if (gameState.tricks.length === 1) {
+      const lastTrick = gameState.tricks[0];
+      return appendTrickInfo(lastTrick, null);
+    } else {
+      const lastTrick = gameState.tricks[gameState.tricks.length - 1];
+      const secondLastTrick = gameState.tricks[gameState.tricks.length - 2];
+      return appendTrickInfo(lastTrick, secondLastTrick);
+    }
+  };
+
+  const formatRank = (rank) => {
+    if (rank === 11) return 'J';
+    if (rank === 12) return 'Q';
+    if (rank === 13) return 'K';
+    if (rank === 14) return 'A';
+    return rank;
+  }
+
+  const getTrickLabel = (trick) => {
+    switch (trick.type) {
+      case TrickType.SINGLE:
+        const card = trick.cards[0];
+        switch (card.type) {
+          case CardType.STANDARD:
+          case CardType.SPARROW:
+            return `${formatRank(trick.rank)} Single`;
+          case CardType.PHOENIX:
+            return `Phoenix (above ${formatRank(Math.floor(trick.rank))})`;
+          case CardType.DRAGON:
+            return 'Dragon';
+          case CardType.DOG:
+          default:
+            return null;
+        }
+      case TrickType.PAIR:
+        return `${formatRank(trick.rank)} Pair`;
+      case TrickType.CONSECUTIVE_PAIRS:
+        return `${formatRank(trick.maxRank)} Consecutive Pairs`;
+      case TrickType.THREE_OF_A_KIND:
+        return `${formatRank(trick.rank)} Three of a Kind`;
+      case TrickType.FULL_HOUSE:
+        return `${formatRank(trick.rank)} Full House`;
+      case TrickType.STRAIGHT:
+        return `${formatRank(trick.maxRank)} Straight`;
+      case TrickType.DOG:
+        return 'Dog';
+      case TrickType.FOUR_OF_A_KIND:
+        return `${formatRank(trick.rank)} Four of a Kind`;
+      case TrickType.STRAIGHT_FLUSH:
+        return `${formatRank(trick.maxRank)} Straight Flush`;
+      default:
+        return null;
+    }
+  }
 
   const myIndex = gameState.players.findIndex(p => p.id === user.id);
 
@@ -420,17 +557,23 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
 
         {/* Trick Area */}
         <div className="trick-area">
-          {gameState.lastTrick ? (
-            <>
-              <div className="played-by">Played
-                by: {gameState.players[gameState.lastTrick.playerIndex]?.name}</div>
-              <div className="played-cards">
-                {(gameState.lastTrick.cards || []).map(c => renderCard(c, false))}
-              </div>
-            </>
-          ) : (
-            <div className="trick-placeholder">Trick Area</div>
+          {gameState.wish !== null && (
+            <div className="current-wish-indicator">
+              Wish: {formatRank(gameState.wish)}
+            </div>
           )}
+          {
+            getLastTrick() ? (
+              <>
+                <div className="played-by">Played by: {gameState.players[getLastTrick().playerIndex]?.name}</div>
+                <div className="played-cards">
+                  {(getLastTrick().cards || []).map(c => renderCard(c, false))}
+                </div>
+                <div className="played-trick-label">{getTrickLabel(getLastTrick())}</div>
+              </>
+            ) : (
+              <div className="trick-placeholder">Trick Area</div>
+            )}
         </div>
 
         {/* Bottom Player (Me) */}
@@ -469,38 +612,50 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       </div>
 
       <div className="controls">
+        {selectedCards.length > 0 && (
+          <div className="selected-trick-feedback">
+            {identifyTrick(selectedCards)?.label || 'Invalid Trick'}
+          </div>
+        )}
         <button
           className="btn-game btn-trick"
           onClick={handlePlayTrick}
-          disabled={selectedCards.length === 0 || gameState.turn !== myIndex}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
         >
           Play Trick
         </button>
         <button
+          className="btn-game btn-trick"
+          onClick={handlePlayBomb}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || (gameState.turn !== myIndex && getLastTrick() === null) || !isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
+        >
+          Play Bomb
+        </button>
+        <button
           className="btn-game btn-pass"
           onClick={handlePass}
-          disabled={gameState.turn !== myIndex || gameState.lastTrick === null}
+          disabled={gameState.phaseStatus !== "PLAYING" || gameState.turn !== myIndex || getLastTrick() === null}
         >
           Pass
         </button>
         <button
           className="btn-game btn-large-tichu"
           onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared: true })}
-          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || gameState.players[myIndex].tichuDeclaration !== null}
+          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || (gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null)}
         >
           Large Tichu
         </button>
         <button
           className="btn-game btn-pass-large-tichu"
           onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared: false })}
-          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || gameState.players[myIndex].tichuDeclaration !== null}
+          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || (gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null)}
         >
           Large Tichu Pass
         </button>
         <button
           className="btn-game btn-small-tichu"
           onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/small-tichu`, {})}
-          disabled={gameState.hand.length !== 14 || (gameState.players[myIndex].tichuDeclaration === 'LARGE' || gameState.players[myIndex].tichuDeclaration === 'SMALL')}
+          disabled={gameState.hand.length !== 14 || (gameState.players[myIndex] && (gameState.players[myIndex].tichuDeclaration === 'LARGE' || gameState.players[myIndex].tichuDeclaration === 'SMALL'))}
         >
           Small Tichu
         </button>
@@ -552,6 +707,12 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           players={gameState.players}
           type={scoreModalType}
           onClose={() => setScoreModalType(null)}
+        />
+      )}
+      {isWishModalOpen && (
+        <WishModal
+          onSelect={executePlayTrick}
+          onClose={() => setIsWishModalOpen(false)}
         />
       )}
     </div>

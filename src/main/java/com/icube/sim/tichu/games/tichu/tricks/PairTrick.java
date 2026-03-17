@@ -16,22 +16,16 @@ public class PairTrick extends Trick {
         assert cards.size() == 2;
         assert Cards.areDistinct(cards);
 
+        var standardCards = Cards.extractStandardCards(cards);
         isPhoenixUsed = Cards.containsPhoenix(cards);
         if (isPhoenixUsed) {
-            var nonPhoenixCard = Cards.extractNonPhoenixCards(cards).get(0);
-            if (nonPhoenixCard instanceof SparrowCard) {
-                rank = 1;
-            } else if (nonPhoenixCard instanceof StandardCard standardCard) {
-                rank = standardCard.rank();
-            } else {
-                throw new AssertionError();
-            }
+            assert standardCards.size() == 1;
         } else {
-            var standardCards = Cards.extractStandardCards(cards);
             assert standardCards.size() == 2;
             assert standardCards.get(0).rank() == standardCards.get(1).rank();
-            rank = standardCards.get(0).rank();
         }
+
+        rank = standardCards.get(0).rank();
     }
 
     @Override
@@ -44,11 +38,10 @@ public class PairTrick extends Trick {
             return false;
         }
 
+        var standardCards = Cards.extractStandardCards(cards);
         if (Cards.containsPhoenix(cards)) {
-            var nonPhoenixCard = Cards.extractNonPhoenixCards(cards).get(0);
-            return nonPhoenixCard instanceof SparrowCard || nonPhoenixCard instanceof StandardCard;
+            return standardCards.size() == 1;
         } else {
-            var standardCards = Cards.extractStandardCards(cards);
             return standardCards.size() == 2 && standardCards.get(0).rank() == standardCards.get(1).rank();
         }
     }
