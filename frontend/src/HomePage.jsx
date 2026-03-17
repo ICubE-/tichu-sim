@@ -65,12 +65,12 @@ const HomePage = () => {
   return (
     <div className="home-container">
       <div className="home-header">
-        <h2>Rooms List</h2>
+        <h2>방 목록</h2>
         <div className="header-buttons">
           <button onClick={handleCreateRoom}>
-            Create Room
+            방 만들기
           </button>
-          <button onClick={handleFetchRooms}>Refresh</button>
+          <button onClick={handleFetchRooms}>새로고침</button>
         </div>
       </div>
 
@@ -81,9 +81,9 @@ const HomePage = () => {
           <thead>
           <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Players</th>
+            <th>이름</th>
+            <th>상태</th>
+            <th>인원</th>
           </tr>
           </thead>
           <tbody>
@@ -106,7 +106,7 @@ const HomePage = () => {
           ) : (
             <tr>
               <td colSpan="4" className="no-rooms">
-                No room exists.
+                방이 없습니다.
               </td>
             </tr>
           )}
