@@ -61,7 +61,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     wish: null,
     phaseStatus: null,
     turn: null,
-    lastTrick: null, // {playerIndex, type, cards}
+    tricks: [], // {playerIndex, type, cards}
   });
 
   const [selectedCards, setSelectedCards] = useState([]);
@@ -102,7 +102,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           wish: data.wish,
           phaseStatus: data.phaseStatus,
           turn: data.turn,
-          lastTrick: data.lastTrick,
+          tricks: data.tricks === null ? [] : data.tricks,
         });
         break;
       case 'INIT_FIRST_DRAWS':
@@ -120,7 +120,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           wish: null,
           phaseStatus: null,
           turn: null,
-          lastTrick: null,
+          tricks: [],
         }));
         break;
       case 'LARGE_TICHU':
@@ -168,7 +168,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           players: prev.players.map(p => ({ ...p, passed: false })),
           phaseStatus: 'PLAYING',
           turn: data,
-          lastTrick: null,
+          tricks: [],
         }));
         break;
       case 'PLAY_TRICK':
@@ -208,7 +208,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             hand: newHand,
             wish: newWish,
             turn: newTurn,
-            lastTrick: data.trick,
+            tricks: [...prev.tricks, data.trick],
           };
         });
         break;
@@ -247,7 +247,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             hand: newHand,
             wish: newWish,
             turn: newTurn,
-            lastTrick: data.bomb,
+            tricks: [...prev.tricks, data.bomb],
           };
         });
         break;

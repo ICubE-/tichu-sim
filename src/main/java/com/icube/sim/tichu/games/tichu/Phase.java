@@ -235,7 +235,7 @@ public class Phase {
         round.nextPhase(playerIndex);
     }
 
-    public Trick getLastTrick() {
-        return tricks.isEmpty() ? null : tricks.getLast();
+    public List<Trick> getTricks() {
+        return List.copyOf(tricks);
     }
 }

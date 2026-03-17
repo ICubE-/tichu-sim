@@ -8,6 +8,7 @@ import com.icube.sim.tichu.games.tichu.dtos.TichuDto;
 import com.icube.sim.tichu.games.tichu.dtos.TrickDto;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class TichuMapper {
@@ -27,13 +28,12 @@ public class TichuMapper {
 
         PhaseStatus phaseStatus = null;
         Integer turn = null;
-        TrickDto lastTrickDto = null;
+        List<TrickDto> trickDtos = null;
         if (round.getStatus() == RoundStatus.PLAYING) {
             var phase = round.getCurrentPhase();
             phaseStatus = phase.getStatus();
             turn = phase.getTurn();
-            var lastTrick = phase.getLastTrick();
-            lastTrickDto = lastTrick == null ? null : trickMapper.toDto(lastTrick);
+            trickDtos = trickMapper.toDtos(phase.getTricks());
         }
 
         return TichuDto.builder()
@@ -48,7 +48,7 @@ public class TichuMapper {
                 .exitOrder(round.getExitOrder())
                 .phaseStatus(phaseStatus)
                 .turn(turn)
-                .lastTrick(lastTrickDto)
+                .tricks(trickDtos)
                 .build();
     }
 }
