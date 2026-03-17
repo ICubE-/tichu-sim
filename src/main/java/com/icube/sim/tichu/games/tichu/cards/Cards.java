@@ -34,10 +34,6 @@ public class Cards {
         return cards.stream().anyMatch(card -> card instanceof PhoenixCard);
     }
 
-    public static List<Card> extractNonPhoenixCards(List<Card> cards) {
-        return cards.stream().filter(card -> !(card instanceof PhoenixCard)).toList();
-    }
-
     public static boolean containsSparrow(List<Card> cards) {
         return cards.stream().anyMatch(card -> card instanceof SparrowCard);
     }
