@@ -75,7 +75,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       case 'START':
         setGameState(prev => ({
           ...prev,
-          players: data.players.map((p, i) => ({
+          players: data.map((p, i) => ({
             ...p,
             index: i,
             cardCount: 0,
@@ -106,6 +106,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
         });
         break;
       case 'INIT_FIRST_DRAWS':
+        setSelectedCards([]);
         setGameState(prev => ({
           ...prev,
           hand: data,
@@ -222,7 +223,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
               ? null
               : prev.wish)
             : null;
-          let newTurn = (prev.turn + 1) % 4;
+          let newTurn = (prev.players.findIndex(p => p.id === data.playerId) + 1) % 4;
           while (prev.players[newTurn].exitOrder !== 0) {
             newTurn = (newTurn + 1) % 4;
           }
@@ -472,35 +473,35 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
         <button
           className="btn-game btn-trick"
           onClick={handlePlayTrick}
-          disabled={selectedCards.length === 0 || gameState.turn !== myIndex}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
         >
           Play Trick
         </button>
         <button
           className="btn-game btn-pass"
           onClick={handlePass}
-          disabled={gameState.turn !== myIndex || gameState.lastTrick === null}
+          disabled={gameState.phaseStatus !== "PLAYING" || gameState.turn !== myIndex || getLastTrick() === null}
         >
           Pass
         </button>
         <button
           className="btn-game btn-large-tichu"
           onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared: true })}
-          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || gameState.players[myIndex].tichuDeclaration !== null}
+          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || (gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null)}
         >
           Large Tichu
         </button>
         <button
           className="btn-game btn-pass-large-tichu"
           onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared: false })}
-          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || gameState.players[myIndex].tichuDeclaration !== null}
+          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || (gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null)}
         >
           Large Tichu Pass
         </button>
         <button
           className="btn-game btn-small-tichu"
           onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/small-tichu`, {})}
-          disabled={gameState.hand.length !== 14 || (gameState.players[myIndex].tichuDeclaration === 'LARGE' || gameState.players[myIndex].tichuDeclaration === 'SMALL')}
+          disabled={gameState.hand.length !== 14 || (gameState.players[myIndex] && (gameState.players[myIndex].tichuDeclaration === 'LARGE' || gameState.players[myIndex].tichuDeclaration === 'SMALL'))}
         >
           Small Tichu
         </button>
