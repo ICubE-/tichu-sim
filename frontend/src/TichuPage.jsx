@@ -4,6 +4,7 @@ import {
   areCardsEqual,
   includesCard,
   excludeCards,
+  sortCards,
   CardType,
 } from './utils/cardUtils.js';
 import { identifyTrick, appendTrickInfo, canCoverUp, canSatisfyWish, TrickType, isBomb } from './utils/trickUtils.js';
@@ -625,7 +626,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
               <>
                 <div className="played-by">Played by: {gameState.players[getLastTrick().playerIndex]?.name}</div>
                 <div className="played-cards">
-                  {(getLastTrick().cards || []).map(c => renderCard(c, false))}
+                  {sortCards(getLastTrick().cards || []).map(c => renderCard(c, false))}
                 </div>
                 <div className="played-trick-label">{getTrickLabel(getLastTrick())}</div>
               </>
@@ -645,7 +646,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             {gameState.players[myIndex] && gameState.players[myIndex].passed && <div className="status-pass">PASS</div>}
           </div>
           <div className="hand">
-            {gameState.hand.map(card => renderCard(card))}
+            {sortCards(gameState.hand).map(card => renderCard(card))}
           </div>
           {gameState.roundStatus === 'EXCHANGING' && (
             <div className="exchange-summary">

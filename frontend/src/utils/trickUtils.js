@@ -333,6 +333,12 @@ export const identifyTrick = (cards, lastTrick) => {
 
 export const appendTrickInfo = (trick, prevTrick) => {
   const standardCards = sortCards(extractStandardCards(trick.cards));
+  let resultCards = [...trick.cards];
+
+  const updatePhoenixRank = (rank) => {
+    resultCards = resultCards.map(c => isPhoenix(c) ? { ...c, effectiveRank: rank } : c);
+  };
+
   switch (trick.type) {
     case TrickType.SINGLE:
       const card = trick.cards[0];
@@ -342,11 +348,14 @@ export const appendTrickInfo = (trick, prevTrick) => {
         case CardType.SPARROW:
           return { ...trick, rank: 1 };
         case CardType.PHOENIX:
+          let pRank;
           if (prevTrick === null) {
-            return { ...trick, rank: 1.5 };
+            pRank = 1.5;
           } else {
-            return { ...trick, rank: appendTrickInfo(prevTrick).rank + 0.5 };
+            pRank = appendTrickInfo(prevTrick).rank + 0.5;
           }
+          updatePhoenixRank(pRank);
+          return { ...trick, rank: pRank, cards: resultCards };
         case CardType.DRAGON:
           return { ...trick, rank: 20 };
         case CardType.DOG:
@@ -354,58 +363,93 @@ export const appendTrickInfo = (trick, prevTrick) => {
           return null;
       }
     case TrickType.PAIR:
-      return { ...trick, rank: standardCards[0].rank };
+      const pairRank = standardCards[0].rank;
+      updatePhoenixRank(pairRank);
+      return { ...trick, rank: pairRank, cards: resultCards };
     case TrickType.CONSECUTIVE_PAIRS: {
       const minRank = standardCards[0].rank;
       const maxRank = standardCards[standardCards.length - 1].rank;
-      return { ...trick, minRank, maxRank, length: maxRank - minRank + 1 };
+      // Assign effective rank to phoenix if it completes a pair
+      if (trick.cards.some(isPhoenix)) {
+        let expectedRank = minRank;
+        let count = 0;
+        let pRank = null;
+        for (const c of standardCards) {
+          if (c.rank === expectedRank) {
+            count++;
+            if (count === 2) {
+              expectedRank++;
+              count = 0;
+            }
+          } else {
+            pRank = expectedRank;
+            break;
+          }
+        }
+        if (pRank === null) pRank = maxRank; // Should not happen if identifyTrick is correct
+        updatePhoenixRank(pRank);
+      }
+      return { ...trick, minRank, maxRank, length: maxRank - minRank + 1, cards: resultCards };
     }
     case TrickType.THREE_OF_A_KIND:
-      return { ...trick, rank: standardCards[0].rank };
+      const threeRank = standardCards[0].rank;
+      updatePhoenixRank(threeRank);
+      return { ...trick, rank: threeRank, cards: resultCards };
     case TrickType.FULL_HOUSE:
+      let tripleRank;
       if (trick.cards.some(isPhoenix)) {
-        if (trick.cards.some(isSparrow)) {
-          return { ...trick, rank: standardCards[2].rank };
+        if (standardCards[0].rank === standardCards[2].rank) {
+          tripleRank = standardCards[0].rank;
+        } else if (standardCards[1].rank === standardCards[3].rank) {
+          tripleRank = standardCards[1].rank;
         } else {
-          return { ...trick, rank: standardCards[2].rank };
+          // 22 33 P -> triple is highest pair rank
+          tripleRank = standardCards[3].rank;
         }
+        updatePhoenixRank(tripleRank);
       } else {
-        return { ...trick, rank: standardCards[2].rank };
+        tripleRank = standardCards[2].rank;
       }
+      return { ...trick, rank: tripleRank, cards: resultCards };
     case TrickType.STRAIGHT:
       if (trick.cards.some(isPhoenix)) {
         if (trick.cards.some(isSparrow)) {
           let expectedRank = 2;
-          let isPhoenixUsed = false;
-          for (const card of standardCards) {
-            if (card.rank !== expectedRank) {
-              isPhoenixUsed = true;
+          let pRank = null;
+          for (const c of standardCards) {
+            if (c.rank !== expectedRank) {
+              pRank = expectedRank;
               break;
             }
             expectedRank++;
           }
-          const maxRank = isPhoenixUsed ? standardCards[standardCards.length - 1].rank : standardCards[standardCards.length - 1].rank + 1;
-          return { ...trick, minRank: 1, maxRank, length: maxRank };
+          const maxRank = pRank !== null ? standardCards[standardCards.length - 1].rank : standardCards[standardCards.length - 1].rank + 1;
+          if (pRank === null) pRank = maxRank;
+          updatePhoenixRank(pRank);
+          return { ...trick, minRank: 1, maxRank, length: maxRank, cards: resultCards };
         } else {
           let expectedRank = standardCards[0].rank;
-          let isPhoenixUsed = false;
-          for (const card of standardCards) {
-            if (card.rank !== expectedRank) {
-              isPhoenixUsed = true;
+          let pRank = null;
+          for (const c of standardCards) {
+            if (c.rank !== expectedRank) {
+              pRank = expectedRank;
               break;
             }
             expectedRank++;
           }
           let minRank = standardCards[0].rank;
           let maxRank = standardCards[standardCards.length - 1].rank;
-          if (!isPhoenixUsed) {
+          if (pRank === null) {
             if (maxRank === 14) {
               minRank--;
+              pRank = minRank;
             } else {
               maxRank++;
+              pRank = maxRank;
             }
           }
-          return { ...trick, minRank, maxRank, length: maxRank - minRank + 1 };
+          updatePhoenixRank(pRank);
+          return { ...trick, minRank, maxRank, length: maxRank - minRank + 1, cards: resultCards };
         }
       } else {
         if (trick.cards.some(isSparrow)) {
@@ -422,9 +466,9 @@ export const appendTrickInfo = (trick, prevTrick) => {
     case TrickType.FOUR_OF_A_KIND:
       return { ...trick, rank: standardCards[0].rank };
     case TrickType.STRAIGHT_FLUSH:
-      const minRank = standardCards[0].rank;
-      const maxRank = standardCards[standardCards.length - 1].rank;
-      return { ...trick, minRank, maxRank, length: maxRank - minRank + 1 };
+      const sfMinRank = standardCards[0].rank;
+      const sfMaxRank = standardCards[standardCards.length - 1].rank;
+      return { ...trick, minRank: sfMinRank, maxRank: sfMaxRank, length: sfMaxRank - sfMinRank + 1 };
     default:
       return null;
   }
