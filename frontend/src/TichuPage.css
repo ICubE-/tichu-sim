@@ -135,28 +135,76 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  line-height: 1;
 }
 
 .card-bottom {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
+  line-height: 1;
   transform: rotate(180deg);
 }
 
-.suit-SPADES {
-  color: #2c3e50;
+.card-rank {
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
-.suit-HEARTS {
+.card-suit {
+  font-size: 1.1rem;
+}
+
+.card-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-center-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.card-image {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.special-tiny-label {
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.special-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #8e44ad;
+}
+
+.special-card {
+  border-color: #8e44ad;
+}
+
+.suit-SPADE {
+  color: #3498db;
+}
+
+.suit-HEART {
   color: #e74c3c;
 }
 
-.suit-DIAMONDS {
-  color: #f39c12;
+.suit-DIAMOND {
+  color: #f1c40f;
 }
 
-.suit-CLUBS {
+.suit-CLUB {
   color: #27ae60;
 }
 

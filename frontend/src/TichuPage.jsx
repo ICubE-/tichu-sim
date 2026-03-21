@@ -8,6 +8,10 @@ import {
 } from './utils/cardUtils.js';
 import { identifyTrick, appendTrickInfo, canCoverUp, canSatisfyWish, TrickType, isBomb } from './utils/trickUtils.js';
 import './TichuPage.css';
+import dogImg from './assets/tichu/dog.png';
+import dragonImg from './assets/tichu/dragon.png';
+import phoenixImg from './assets/tichu/phoenix.png';
+import sparrowImg from './assets/tichu/sparrow.png';
 
 const ScoreModal = ({ scoresHistory, players, type, onClose }) => {
   if (!type) return null;
@@ -516,23 +520,62 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     return gameState.players[(myIndex + offset) % 4];
   };
 
-  const renderCard = (card, isSelectable = true) => (
-    <div
-      key={`${card.type}-${card.suit}-${card.rank}`}
-      className={`card ${includesCard(selectedCards, card) ? 'selected' : ''} suit-${card.suit}`}
-      onClick={() => isSelectable && toggleCardSelection(card)}
-    >
-      <div className="card-top">
-        <span>{card.type}</span>
-        <span>{card.rank}</span>
-        <span>{card.suit}</span>
+  const renderCard = (card, isSelectable = true) => {
+    const getSuitIcon = (suit) => {
+      switch (suit) {
+        case 'SPADE': return '♠';
+        case 'HEART': return '♥';
+        case 'DIAMOND': return '♦';
+        case 'CLUB': return '♣';
+        default: return '';
+      }
+    };
+
+    const isSpecial = card.type !== CardType.STANDARD;
+    const suitIcon = getSuitIcon(card.suit);
+    const rankLabel = isSpecial ? null : formatRank(card.rank);
+
+    let centerContent = null;
+    if (isSpecial) {
+      let imgSrc = null;
+      switch (card.type) {
+        case CardType.SPARROW: imgSrc = sparrowImg; break;
+        case CardType.PHOENIX: imgSrc = phoenixImg; break;
+        case CardType.DRAGON: imgSrc = dragonImg; break;
+        case CardType.DOG: imgSrc = dogImg; break;
+        default: break;
+      }
+      if (imgSrc) {
+        centerContent = <img src={imgSrc} alt={card.type} className="card-image" />;
+      } else {
+        centerContent = <span className="special-label">{card.type}</span>;
+      }
+    } else {
+      centerContent = <span className="card-center-icon">{suitIcon}</span>;
+    }
+
+    return (
+      <div
+        key={`${card.type}-${card.suit}-${card.rank}`}
+        className={`card ${includesCard(selectedCards, card) ? 'selected' : ''} suit-${card.suit} ${isSpecial ? 'special-card' : ''}`}
+        onClick={() => isSelectable && toggleCardSelection(card)}
+      >
+        <div className="card-top">
+          {rankLabel && <span className="card-rank">{rankLabel}</span>}
+          {suitIcon && <span className="card-suit">{suitIcon}</span>}
+          {isSpecial && <span className="special-tiny-label">{card.type}</span>}
+        </div>
+        <div className="card-center">
+          {centerContent}
+        </div>
+        <div className="card-bottom">
+          {rankLabel && <span className="card-rank">{rankLabel}</span>}
+          {suitIcon && <span className="card-suit">{suitIcon}</span>}
+          {isSpecial && <span className="special-tiny-label">{card.type}</span>}
+        </div>
       </div>
-      <div className="card-bottom">
-        <span>{card.rank}</span>
-        <span>{card.suit}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderPlayer = (p, position) => {
     if (!p) return null;
