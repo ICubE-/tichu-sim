@@ -42,11 +42,15 @@ export const identifyTrick = (cards, lastTrick) => {
     if (isDragon(card)) label = 'Dragon';
     if (isSparrow(card)) label = 'Sparrow (1)';
     if (isPhoenix(card)) {
-      if (lastTrick.type !== TrickType.SINGLE) {
+      if (lastTrick === null) {
+        rank = 1.5;
+        label = 'Phoenix';
+      } else if (lastTrick.type !== TrickType.SINGLE) {
         return null;
+      } else {
+        rank = Math.min(lastTrick.rank + 0.5, 15);
+        label = 'Phoenix';
       }
-      rank = Math.min(lastTrick.rank + 0.5, 15);
-      label = 'Phoenix';
     }
     return { type: TrickType.SINGLE, rank, label };
   }
