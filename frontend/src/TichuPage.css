@@ -36,27 +36,22 @@
 }
 
 .player-bottom {
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 10px;
 }
 
 .player-top {
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 10px;
+  flex-direction: column-reverse;
 }
 
 .player-left {
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%) rotate(90deg);
+  left: 10px;
+  flex-direction: row-reverse;
 }
 
 .player-right {
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%) rotate(-90deg);
+  right: 10px;
+  flex-direction: row;
 }
 
 .player-info {
@@ -79,7 +74,7 @@
   opacity: 0.8;
 }
 
-.declaration {
+.tichu-declaration {
   color: #ffd700;
   font-size: 0.8em;
   margin-top: 4px;
@@ -94,14 +89,26 @@
 /* Hand Styles */
 .hand {
   display: flex;
-  gap: -30px;
-  /* Overlap cards */
   justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+
+.player-top .hand {
+  flex-direction: row-reverse;
+}
+
+.player-left .hand {
+  flex-direction: column;
+}
+
+.player-right .hand {
+  flex-direction: column-reverse;
 }
 
 .card {
-  width: 80px;
-  height: 120px;
+  width: 100px;
+  height: 140px;
   background: white;
   border-radius: 8px;
   border: 2px solid #333;
@@ -117,8 +124,25 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.card:not(:first-child) {
+.player-left .card, .player-right .card {
+  width: 140px;
+  height: 100px;
+}
+
+.player-bottom .card:not(:first-child) {
   margin-left: -40px;
+}
+
+.player-top .card:not(:first-child) {
+  margin-right: -40px;
+}
+
+.player-left .card:not(:first-child) {
+  margin-top: -40px;
+}
+
+.player-right .card:not(:first-child) {
+  margin-bottom: -40px;
 }
 
 .card.selected {
@@ -128,11 +152,13 @@
 }
 
 .card.back {
-  background: repeating-linear-gradient(45deg,
-      #2c3e50,
-      #2c3e50 10px,
-      #34495e 10px,
-      #34495e 20px);
+  background: repeating-linear-gradient(
+    45deg,
+    #2c3e50,
+    #2c3e50 10px,
+    #34495e 10px,
+    #34495e 20px
+  );
   border: 2px solid #ecf0f1;
 }
 
