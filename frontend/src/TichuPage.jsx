@@ -629,20 +629,20 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       <div className="controls">
         {selectedCards.length > 0 && (
           <div className="selected-trick-feedback">
-            {identifyTrick(selectedCards)?.label || 'Invalid Trick'}
+            {identifyTrick(selectedCards, getLastTrick())?.label || 'Invalid Trick'}
           </div>
         )}
         <button
           className="btn-game btn-trick"
           onClick={handlePlayTrick}
-          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards, getLastTrick())?.type) || !canCoverUp(identifyTrick(selectedCards, getLastTrick()), getLastTrick())}
         >
           Play Trick
         </button>
         <button
           className="btn-game btn-trick"
           onClick={handlePlayBomb}
-          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || (gameState.turn !== myIndex && getLastTrick() === null) || !isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || (gameState.turn !== myIndex && getLastTrick() === null) || !isBomb(identifyTrick(selectedCards, getLastTrick())?.type) || !canCoverUp(identifyTrick(selectedCards, getLastTrick()), getLastTrick())}
         >
           Play Bomb
         </button>
