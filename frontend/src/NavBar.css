@@ -5,7 +5,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
+  background-color: white;
   border-bottom: 1px solid #ddd;
   z-index: 100;
   margin-bottom: 1rem;
@@ -29,8 +29,8 @@
 .settings-btn, .user-name {
   cursor: pointer;
   font-size: 1rem;
-  padding: 5px 10px;
-  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
   transition: background-color 0.2s;
 }
 
@@ -41,7 +41,7 @@
 .logout-btn {
   cursor: pointer;
   color: #ff4d4f;
-  font-size: 1.2rem;
+  font-size: 1rem;
   border: none;
   background: none;
 }
