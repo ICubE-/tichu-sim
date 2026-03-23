@@ -44,7 +44,7 @@
   position: relative;
   width: 100%;
   max-width: var(--content-max-width);
-  height: calc(100% - 3rem);
+  height: calc(100% - 4rem);
   margin-top: 3rem;
   display: flex;
   flex-direction: column;
@@ -184,7 +184,7 @@
   --card-margin: max(var(--min-card-margin), min(calc((14 * var(--card-width) - 100vw) / 13), var(--max-card-margin)));
 }
 
-.player-bottom .card:not(:first-child) {
+.player-bottom .card:not(:first-child), .trick-area .card:not(:first-child) {
   margin-left: calc(var(--card-margin) * -1);
 }
 
@@ -201,7 +201,7 @@
 }
 
 .card.selected {
-  transform: translateY(-30px);
+  transform: translateY(-1.5rem);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   border-color: #4facfe;
 }
@@ -327,7 +327,6 @@
 
 .played-cards {
   display: flex;
-  gap: 10px;
 }
 
 .played-by {
