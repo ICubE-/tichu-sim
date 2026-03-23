@@ -642,9 +642,15 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     );
   };
 
+  const redTotal = gameState.scoresHistory.reduce((sum, score) => sum + score[0], 0);
+  const blueTotal = gameState.scoresHistory.reduce((sum, score) => sum + score[1], 0);
+
   return (
     <div className="tichu-game-container">
       <div className="game-board content">
+        <div className="score-display-top-left">
+          <span className="team-red-label">RED</span> {redTotal} : {blueTotal} <span className="team-blue-label">BLUE</span>
+        </div>
         {/* Top Player (Partner) */}
         {renderPlayer(getPlayerAt(2), 'top')}
 
