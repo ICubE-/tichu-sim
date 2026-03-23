@@ -69,6 +69,14 @@
   margin-bottom: 4px;
 }
 
+.player-name.team-RED {
+  color: #e74c3c;
+}
+
+.player-name.team-BLUE {
+  color: #3498db;
+}
+
 .card-count {
   font-size: 0.9em;
   opacity: 0.8;

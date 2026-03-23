@@ -98,7 +98,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
 
   const [gameState, setGameState] = useState({
     rule: null,
-    players: [], // {id, name, index, cardCount, tichuDeclaration, exitOrder, passed}
+    players: [], // {id, name, team, index, cardCount, tichuDeclaration, exitOrder, passed}
     scoresHistory: [],
     hand: [], // My cards
     roundStatus: null,
@@ -624,7 +624,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     return (
       <div className={`player-section player-${position} ${isMyTurn ? 'active-turn' : ''}`}>
         <div className="player-info">
-          <div className="player-name">{p.name}</div>
+          <div className={`player-name team-${p.team}`}>{p.name}</div>
           <div className="card-count">{p.cardCount} Cards</div>
           {p.tichuDeclaration !== null && p.tichuDeclaration !== 'NONE' &&
             <div className="tichu-declaration">{p.tichuDeclaration}</div>}
@@ -678,7 +678,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
         {/* Bottom Player (Me) */}
         <div className="player-section player-bottom">
           <div className="player-info">
-            <div className="player-name">{user.name} (ME)</div>
+            <div className={`player-name team-${gameState.players[myIndex]?.team}`}>{user.name}</div>
             <div className="card-count">{gameState.hand.length} Cards</div>
             {gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null && gameState.players[myIndex].tichuDeclaration !== 'NONE' &&
               <div className="tichu-declaration">{gameState.players[myIndex].tichuDeclaration}</div>}
