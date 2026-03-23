@@ -1,23 +1,54 @@
 .tichu-game-container {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   background: radial-gradient(circle at center, #1a4a1a 0%, #0d2a0d 100%);
   overflow: hidden;
   color: white;
   font-family: 'Inter', sans-serif;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.score-display-top-left {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: bold;
+  font-size: 1.2rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.team-red-label {
+  color: #e74c3c;
+}
+
+.team-blue-label {
+  color: #3498db;
 }
 
 .game-board {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  height: 90%;
+  position: relative;
+  width: 100%;
+  max-width: var(--content-max-width);
+  height: calc(100% - 3rem);
+  margin-top: 3rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
@@ -31,27 +62,22 @@
 }
 
 .player-bottom {
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 10px;
 }
 
 .player-top {
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 10px;
+  flex-direction: column-reverse;
 }
 
 .player-left {
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%) rotate(90deg);
+  left: 10px;
+  flex-direction: row-reverse;
 }
 
 .player-right {
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%) rotate(-90deg);
+  right: 10px;
+  flex-direction: row;
 }
 
 .player-info {
@@ -69,12 +95,20 @@
   margin-bottom: 4px;
 }
 
+.player-name.team-RED {
+  color: #e74c3c;
+}
+
+.player-name.team-BLUE {
+  color: #3498db;
+}
+
 .card-count {
   font-size: 0.9em;
   opacity: 0.8;
 }
 
-.declaration {
+.tichu-declaration {
   color: #ffd700;
   font-size: 0.8em;
   margin-top: 4px;
@@ -89,14 +123,37 @@
 /* Hand Styles */
 .hand {
   display: flex;
-  gap: -30px;
-  /* Overlap cards */
   justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+
+.player-top .hand {
+  flex-direction: row-reverse;
+}
+
+.player-left .hand {
+  flex-direction: column;
+}
+
+.player-right .hand {
+  flex-direction: column-reverse;
+}
+
+@media screen and (max-width: 1024px) {
+
+  .player-top .hand,
+  .player-left .hand,
+  .player-right .hand {
+    display: none;
+  }
 }
 
 .card {
-  width: 80px;
-  height: 120px;
+  --card-width: min(6rem, 100vw / 16 * 3);
+  --card-height: calc(var(--card-width) * 1.4);
+  width: var(--card-width);
+  height: var(--card-height);
   background: white;
   border-radius: 8px;
   border: 2px solid #333;
@@ -105,15 +162,42 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 8px;
-  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
   position: relative;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+.player-bottom .card {
+  cursor: pointer;
+}
+
+.player-left .card,
+.player-right .card {
+  width: var(--card-height);
+  height: var(--card-width);
+}
+
 .card:not(:first-child) {
-  margin-left: -40px;
+  --min-card-margin: calc(var(--card-width) / 3);
+  --max-card-margin: calc(var(--card-width) / 3 * 2);
+  --card-margin: max(var(--min-card-margin), min(calc((14 * var(--card-width) - 100vw) / 13), var(--max-card-margin)));
+}
+
+.player-bottom .card:not(:first-child) {
+  margin-left: calc(var(--card-margin) * -1);
+}
+
+.player-top .card:not(:first-child) {
+  margin-right: calc(var(--max-card-margin) * -1);
+}
+
+.player-left .card:not(:first-child) {
+  margin-top: calc(var(--max-card-margin) * -1);
+}
+
+.player-right .card:not(:first-child) {
+  margin-bottom: calc(var(--max-card-margin) * -1);
 }
 
 .card.selected {
@@ -135,28 +219,72 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  line-height: 1;
 }
 
 .card-bottom {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
+  line-height: 1;
   transform: rotate(180deg);
 }
 
-.suit-SPADES {
-  color: #2c3e50;
+.card-rank {
+  font-size: 1rem;
+  font-weight: bold;
 }
 
-.suit-HEARTS {
+.card-suit {
+  font-size: 0.8rem;
+}
+
+.card-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-center-icon {
+  font-size: calc(var(--card-width) * 0.4);
+  opacity: 0.8;
+}
+
+.card-image {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.special-tiny-label {
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.special-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #8e44ad;
+}
+
+.suit-SPADE {
+  color: #3498db;
+}
+
+.suit-HEART {
   color: #e74c3c;
 }
 
-.suit-DIAMONDS {
-  color: #f39c12;
+.suit-DIAMOND {
+  color: #f1c40f;
 }
 
-.suit-CLUBS {
+.suit-CLUB {
   color: #27ae60;
 }
 

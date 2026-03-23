@@ -96,9 +96,11 @@ public class Phase {
             if (round.isOneTwo()) {
                 status = PhaseStatus.FINISHED;
                 round.finishOneTwo();
+                return;
             } else if (round.isOnePlayerLeft()) {
                 status = PhaseStatus.FINISHED;
                 round.finish();
+                return;
             }
         }
 
@@ -180,8 +182,7 @@ public class Phase {
         // Must fulfill the wish if it's possible.
         var player = game.getPlayer(playerIndex);
         var prevTrick = tricks.getLast();
-        if (round.getWish() != null && player.canPlayWishCard(round.getWish(), prevTrick)
-        ) {
+        if (round.getWish() != null && player.canPlayWishCard(round.getWish(), prevTrick)) {
             throw new InvalidPassException();
         }
 

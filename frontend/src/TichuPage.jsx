@@ -1,13 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from "./useAuth.jsx";
 import {
   areCardsEqual,
   includesCard,
   excludeCards,
+  sortCards,
   CardType,
 } from './utils/cardUtils.js';
 import { identifyTrick, appendTrickInfo, canCoverUp, canSatisfyWish, TrickType, isBomb } from './utils/trickUtils.js';
 import './TichuPage.css';
+import dogImg from './assets/tichu/dog.png';
+import dragonImg from './assets/tichu/dragon.png';
+import phoenixImg from './assets/tichu/phoenix.png';
+import sparrowImg from './assets/tichu/sparrow.png';
 
 const ScoreModal = ({ scoresHistory, players, type, onClose }) => {
   if (!type) return null;
@@ -93,7 +98,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
 
   const [gameState, setGameState] = useState({
     rule: null,
-    players: [], // {id, name, index, cardCount, tichuDeclaration, exitOrder, passed}
+    players: [], // {id, name, team, index, cardCount, tichuDeclaration, exitOrder, passed}
     scoresHistory: [],
     hand: [], // My cards
     roundStatus: null,
@@ -107,6 +112,21 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
   const [exchangeSelection, setExchangeSelection] = useState({ left: null, mid: null, right: null });
   const [scoreModalType, setScoreModalType] = useState(null); // null, 'ROUND_END', 'END'
   const [isWishModalOpen, setIsWishModalOpen] = useState(false);
+  const messageQueue = useRef([]);
+  const isPaused = useRef(false);
+  const handleTichuMessageRef = useRef(null);
+
+  // Resume processing when delay ends
+  const processQueue = useCallback(() => {
+    while (messageQueue.current.length > 0 && !isPaused.current) {
+      const msg = messageQueue.current.shift();
+      if (handleTichuMessageRef.current) {
+        handleTichuMessageRef.current(msg);
+      }
+      // If handleTichuMessage triggered another pause, stop processing
+      if (isPaused.current) break;
+    }
+  }, []); // No dependencies needed as it uses Refs
 
   const handleTichuMessage = useCallback((message) => {
     console.log('Tichu Message:', message);
@@ -126,6 +146,17 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
         }));
         break;
       case 'GET':
+        const getPassed = (index, phaseStatus, turn, lastTrick) => {
+          if (phaseStatus === 'WAITING_DRAGON_SELECTION') {
+            return index !== turn;
+          }
+          if (index === turn) return false;
+          if (lastTrick.playerIndex < turn) {
+            return lastTrick.playerIndex < index && index < turn;
+          } else {
+            return index < turn || lastTrick.playerIndex < index;
+          }
+        }
         setGameState({
           rule: data.rule,
           players: data.players.map((p, i) => ({
@@ -133,8 +164,12 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             index: i,
             cardCount: data.handCounts[p.id],
             tichuDeclaration: data.tichuDeclarations[i],
-            exitOrder: 0,
-            passed: false,
+            exitOrder: data.exitOrder[i],
+            passed: data.roundStatus !== 'PLAYING' ? false : (
+              data.exitOrder[i] !== 0 ? false : (
+                data.tricks.length === 0 ? false : getPassed(i, data.phaseStatus, data.turn, data.tricks[data.tricks.length - 1])
+              )
+            ),
           })),
           scoresHistory: data.scoresHistory,
           hand: data.myHand,
@@ -252,6 +287,13 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             tricks: [...prev.tricks, data.trick],
           };
         });
+        if (data.trick.type === TrickType.DOG) {
+          isPaused.current = true;
+          setTimeout(() => {
+            isPaused.current = false;
+            processQueue();
+          }, 1000);
+        }
         break;
       case 'PLAY_BOMB':
         setGameState(prev => {
@@ -319,8 +361,11 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           ...prev,
           scoresHistory: data,
         }));
+        isPaused.current = true;
         setTimeout(() => {
           setScoreModalType('ROUND_END');
+          isPaused.current = false;
+          processQueue();
         }, 1000);
         break;
       case 'END':
@@ -328,27 +373,42 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           ...prev,
           scoresHistory: data,
         }));
+        isPaused.current = true;
         setTimeout(() => {
           setScoreModalType('END');
+          isPaused.current = false;
+          processQueue();
         }, 1000);
         break;
       default:
         break;
     }
-  }, [user.id]);
+  }, [user.id, processQueue]);
+
+  useEffect(() => {
+    handleTichuMessageRef.current = handleTichuMessage;
+  }, [handleTichuMessage]);
 
   useEffect(() => {
     if (!user) {
       return;
     }
 
+    const onMessageReceived = (message) => {
+      if (isPaused.current) {
+        messageQueue.current.push(message);
+      } else {
+        handleTichuMessage(message);
+      }
+    };
+
     const destination = `/user/${user.id}/queue/game/tichu`;
-    stomp.subscribe(destination, handleTichuMessage);
+    stomp.subscribe(destination, onMessageReceived);
 
     stomp.publish(`/app/rooms/${roomId}/game/tichu/get`, {});
 
-    return () => stomp.unsubscribe(destination, handleTichuMessage);
-  }, [roomId, handleTichuMessage, user]);
+    return () => stomp.unsubscribe(destination, onMessageReceived);
+  }, [roomId, handleTichuMessage, user, processQueue]);
 
   const toggleCardSelection = (card) => {
     setSelectedCards(prev => {
@@ -501,23 +561,62 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     return gameState.players[(myIndex + offset) % 4];
   };
 
-  const renderCard = (card, isSelectable = true) => (
-    <div
-      key={`${card.type}-${card.suit}-${card.rank}`}
-      className={`card ${includesCard(selectedCards, card) ? 'selected' : ''} suit-${card.suit}`}
-      onClick={() => isSelectable && toggleCardSelection(card)}
-    >
-      <div className="card-top">
-        <span>{card.type}</span>
-        <span>{card.rank}</span>
-        <span>{card.suit}</span>
+  const renderCard = (card, isSelectable = true) => {
+    const getSuitIcon = (suit) => {
+      switch (suit) {
+        case 'SPADE': return '♠';
+        case 'HEART': return '♥';
+        case 'DIAMOND': return '♦';
+        case 'CLUB': return '♣';
+        default: return '';
+      }
+    };
+
+    const isSpecial = card.type !== CardType.STANDARD;
+    const suitIcon = getSuitIcon(card.suit);
+    const rankLabel = isSpecial ? null : formatRank(card.rank);
+
+    let centerContent = null;
+    if (isSpecial) {
+      let imgSrc = null;
+      switch (card.type) {
+        case CardType.SPARROW: imgSrc = sparrowImg; break;
+        case CardType.PHOENIX: imgSrc = phoenixImg; break;
+        case CardType.DRAGON: imgSrc = dragonImg; break;
+        case CardType.DOG: imgSrc = dogImg; break;
+        default: break;
+      }
+      if (imgSrc) {
+        centerContent = <img src={imgSrc} alt={card.type} className="card-image" />;
+      } else {
+        centerContent = <span className="special-label">{card.type}</span>;
+      }
+    } else {
+      centerContent = <span className="card-center-icon">{suitIcon}</span>;
+    }
+
+    return (
+      <div
+        key={`${card.type}-${card.suit}-${card.rank}`}
+        className={`card ${includesCard(selectedCards, card) ? 'selected' : ''} suit-${card.suit} ${isSpecial ? 'special-card' : ''}`}
+        onClick={() => isSelectable && toggleCardSelection(card)}
+      >
+        <div className="card-top">
+          {rankLabel && <span className="card-rank">{rankLabel}</span>}
+          {suitIcon && <span className="card-suit">{suitIcon}</span>}
+          {isSpecial && <span className="special-tiny-label">{card.type}</span>}
+        </div>
+        <div className="card-center">
+          {centerContent}
+        </div>
+        <div className="card-bottom">
+          {rankLabel && <span className="card-rank">{rankLabel}</span>}
+          {suitIcon && <span className="card-suit">{suitIcon}</span>}
+          {isSpecial && <span className="special-tiny-label">{card.type}</span>}
+        </div>
       </div>
-      <div className="card-bottom">
-        <span>{card.rank}</span>
-        <span>{card.suit}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderPlayer = (p, position) => {
     if (!p) return null;
@@ -525,10 +624,10 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     return (
       <div className={`player-section player-${position} ${isMyTurn ? 'active-turn' : ''}`}>
         <div className="player-info">
-          <div className="player-name">{p.name}</div>
+          <div className={`player-name team-${p.team}`}>{p.name}</div>
           <div className="card-count">{p.cardCount} Cards</div>
           {p.tichuDeclaration !== null && p.tichuDeclaration !== 'NONE' &&
-            <div className="tichuDeclaration">{p.tichuDeclaration}</div>}
+            <div className="tichu-declaration">{p.tichuDeclaration}</div>}
           {isMyTurn && <div className="status-turn">Turn</div>}
           {p.passed && <div className="status-pass">PASS</div>}
         </div>
@@ -543,9 +642,15 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     );
   };
 
+  const redTotal = gameState.scoresHistory.reduce((sum, score) => sum + score[0], 0);
+  const blueTotal = gameState.scoresHistory.reduce((sum, score) => sum + score[1], 0);
+
   return (
     <div className="tichu-game-container">
-      <div className="game-board">
+      <div className="game-board content">
+        <div className="score-display-top-left">
+          <span className="team-red-label">RED</span> {redTotal} : {blueTotal} <span className="team-blue-label">BLUE</span>
+        </div>
         {/* Top Player (Partner) */}
         {renderPlayer(getPlayerAt(2), 'top')}
 
@@ -567,7 +672,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
               <>
                 <div className="played-by">Played by: {gameState.players[getLastTrick().playerIndex]?.name}</div>
                 <div className="played-cards">
-                  {(getLastTrick().cards || []).map(c => renderCard(c, false))}
+                  {sortCards(getLastTrick().cards || []).map(c => renderCard(c, false))}
                 </div>
                 <div className="played-trick-label">{getTrickLabel(getLastTrick())}</div>
               </>
@@ -579,15 +684,15 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
         {/* Bottom Player (Me) */}
         <div className="player-section player-bottom">
           <div className="player-info">
-            <div className="player-name">{user.name} (ME)</div>
+            <div className={`player-name team-${gameState.players[myIndex]?.team}`}>{user.name}</div>
             <div className="card-count">{gameState.hand.length} Cards</div>
             {gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null && gameState.players[myIndex].tichuDeclaration !== 'NONE' &&
-              <div className="tichuDeclaration">{gameState.players[myIndex].tichuDeclaration}</div>}
+              <div className="tichu-declaration">{gameState.players[myIndex].tichuDeclaration}</div>}
             {gameState.turn === myIndex && <div className="status-turn">Turn</div>}
             {gameState.players[myIndex] && gameState.players[myIndex].passed && <div className="status-pass">PASS</div>}
           </div>
           <div className="hand">
-            {gameState.hand.map(card => renderCard(card))}
+            {sortCards(gameState.hand).map(card => renderCard(card))}
           </div>
           {gameState.roundStatus === 'EXCHANGING' && (
             <div className="exchange-summary">
@@ -614,20 +719,20 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       <div className="controls">
         {selectedCards.length > 0 && (
           <div className="selected-trick-feedback">
-            {identifyTrick(selectedCards)?.label || 'Invalid Trick'}
+            {identifyTrick(selectedCards, getLastTrick())?.label || 'Invalid Trick'}
           </div>
         )}
         <button
           className="btn-game btn-trick"
           onClick={handlePlayTrick}
-          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards, getLastTrick())?.type) || !canCoverUp(identifyTrick(selectedCards, getLastTrick()), getLastTrick())}
         >
           Play Trick
         </button>
         <button
           className="btn-game btn-trick"
           onClick={handlePlayBomb}
-          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || (gameState.turn !== myIndex && getLastTrick() === null) || !isBomb(identifyTrick(selectedCards)?.type) || !canCoverUp(identifyTrick(selectedCards), getLastTrick())}
+          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || (gameState.turn !== myIndex && getLastTrick() === null) || !isBomb(identifyTrick(selectedCards, getLastTrick())?.type) || !canCoverUp(identifyTrick(selectedCards, getLastTrick()), getLastTrick())}
         >
           Play Bomb
         </button>
