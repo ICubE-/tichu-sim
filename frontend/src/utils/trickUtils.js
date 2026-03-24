@@ -477,6 +477,7 @@ export const appendTrickInfo = (trick, prevTrick) => {
 export const canCoverUp = (myTrick, lastTrick) => {
   if (!myTrick) return false;
   if (!lastTrick) return true;
+  if (lastTrick.type === TrickType.DOG) return false;
 
   switch (myTrick.type) {
     case TrickType.SINGLE:

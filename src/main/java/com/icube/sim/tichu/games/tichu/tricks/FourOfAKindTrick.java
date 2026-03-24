@@ -49,7 +49,7 @@ public class FourOfAKindTrick extends Trick {
 
     @Override
     public boolean canCoverUp(Trick other) {
-        if (other instanceof StraightFlushTrick) {
+        if (other instanceof DogTrick || other instanceof StraightFlushTrick) {
             return false;
         } else if (other instanceof FourOfAKindTrick other1) {
             return canCoverUp(other1);
