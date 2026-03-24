@@ -193,7 +193,7 @@ const RoomDetailPage = () => {
   const formatWinningScore = (winningScore) => {
     switch (winningScore) {
       case 'ZERO':
-        return 'Single Round';
+        return '단판';
       case 'TWO_HUNDRED':
         return '200';
       case 'FIVE_HUNDRED':
@@ -210,15 +210,15 @@ const RoomDetailPage = () => {
       <div className="room-detail-header">
         <h2>[{room.id}] {room.name}</h2>
         <div className="room-detail-header-buttons">
-          <button onClick={handleGameStartRequest} className="game-start-button" disabled={!canStartGame}>Start Game</button>
-          <button onClick={handleLeaveRoom} className="leave-button">Leave</button>
+          <button onClick={handleGameStartRequest} className="game-start-button" disabled={!canStartGame}>게임 시작</button>
+          <button onClick={handleLeaveRoom} className="leave-button">나가기</button>
         </div>
       </div>
 
       <div className="room-content">
         <div className="room-info-section">
           <div className="info-card">
-            <h3>Players ({room.members?.length || 0} / 4)</h3>
+            <h3>참가자 ({room.members?.length || 0} / 4)</h3>
             <ul className="member-list">
               {room.members?.map((member) => (
                 <li key={member.id} className="member-item">
@@ -229,10 +229,10 @@ const RoomDetailPage = () => {
           </div>
 
           <div className="info-card">
-            <h3>Rules</h3>
+            <h3>게임 설정</h3>
             <div className="rule-box">
               <div className="rule-item">
-                <span>Winning Score</span>
+                <span>승리 점수</span>
                 <div className="rule-button-group">
                   {['ZERO', 'TWO_HUNDRED', 'FIVE_HUNDRED', 'ONE_THOUSAND'].map((score) => (
                     <button
@@ -246,7 +246,7 @@ const RoomDetailPage = () => {
                 </div>
               </div>
               <div className="rule-item">
-                <span>Team selection</span>
+                <span>팀 선택</span>
                 <div className="rule-item-box">
                   {room.members.map((member) => (
                     <div className="rule-item">
@@ -257,7 +257,7 @@ const RoomDetailPage = () => {
                             className={`rule-button team-${team.toLowerCase()} ${room.gameRule.teamAssignment?.[member.id] === team || (!room.gameRule.teamAssignment?.[member.id] && team === 'NONE') ? 'active' : ''}`}
                             onClick={() => handleTeamChange(member, team)}
                           >
-                            {team === 'NONE' ? 'Auto' : team}
+                            {team === 'NONE' ? '자동' : team}
                           </button>
                         ))}
                       </div>
@@ -271,11 +271,11 @@ const RoomDetailPage = () => {
 
         <div className="chat-section">
           <div className="chat-header">
-            <strong>Chat</strong>
+            <strong>채팅</strong>
           </div>
           <div className="chat-messages">
             {chatMessages.length === 0 ? (
-              <div className="chat-placeholder">No messages yet.</div>
+              <div className="chat-placeholder">메시지가 없습니다.</div>
             ) : (
               chatMessages.map((msg, index) => (
                 <div key={index} className="chat-message">
@@ -288,12 +288,12 @@ const RoomDetailPage = () => {
             <input
               type="text"
               name="message"
-              placeholder="Enter a message..."
+              placeholder="메시지를 입력하세요..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleKeyPressOnChatInput}
             />
-            <button onClick={handleSendChatMessage}>Send</button>
+            <button onClick={handleSendChatMessage}>전송</button>
           </div>
         </div>
       </div>
