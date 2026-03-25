@@ -468,7 +468,6 @@ const TichuPage = ({ roomId, stomp, chatMessages, onGameEnd }) => {
       wish: wish,
     });
     setSelectedCards([]);
-    setIsWishModalOpen(false);
   };
 
   const handlePlayBomb = () => {
@@ -889,7 +888,10 @@ const TichuPage = ({ roomId, stomp, chatMessages, onGameEnd }) => {
       )}
       {isWishModalOpen && (
         <WishModal
-          onSelect={executePlayTrick}
+          onSelect={(wish) => {
+            setIsWishModalOpen(false);
+            executePlayTrick(wish);
+          }}
           onClose={() => setIsWishModalOpen(false)}
         />
       )}
