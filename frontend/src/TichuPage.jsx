@@ -116,6 +116,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
   const isPaused = useRef(false);
   const handleTichuMessageRef = useRef(null);
   const [isRulePopupOpen, setIsRulePopupOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
 
   // Resume processing when delay ends
   const processQueue = useCallback(() => {
@@ -389,6 +390,24 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
   useEffect(() => {
     handleTichuMessageRef.current = handleTichuMessage;
   }, [handleTichuMessage]);
+
+  const handleSendChatMessage = () => {
+    if (chatInput.trim() === '') {
+      return;
+    }
+
+    stomp.publish(`/app/rooms/${roomId}/chat`, {
+      message: chatInput
+    });
+
+    setChatInput('');
+  };
+
+  const handleKeyPressOnChatInput = (e) => {
+    if (e.key === 'Enter') {
+      handleSendChatMessage();
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -735,6 +754,32 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Chat Area */}
+        <div className="tichu-chat-section">
+          <div className="tichu-chat-messages">
+            {chatMessages.length === 0 ? (
+              <div className="tichu-chat-placeholder">메시지가 없습니다.</div>
+            ) : (
+              chatMessages.map((msg, index) => (
+                <div key={index} className="tichu-chat-message">
+                  <strong>{gameState.players.find(m => m.id === msg.userId)?.name || 'Unknown'}:</strong> {msg.message}
+                </div>
+              ))
+            )}
+          </div>
+          <div className="tichu-chat-input-area">
+            <input
+              type="text"
+              name="message"
+              placeholder="메시지를 입력하세요..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={handleKeyPressOnChatInput}
+            />
+            <button onClick={handleSendChatMessage}>전송</button>
+          </div>
         </div>
 
         {/* Bottom Player (Me) */}
