@@ -250,7 +250,6 @@ const TichuPage = ({ roomId, stomp, chatMessages, onGameEnd }) => {
   }, []); // No dependencies needed as it uses Refs
 
   const handleTichuMessage = useCallback((message) => {
-    console.log('Tichu Message:', message);
     const data = message.data;
     switch (message.type) {
       case 'START':
