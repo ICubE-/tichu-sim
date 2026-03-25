@@ -14,6 +14,122 @@ import dragonImg from './assets/tichu/dragon.png';
 import phoenixImg from './assets/tichu/phoenix.png';
 import sparrowImg from './assets/tichu/sparrow.png';
 
+const formatRank = (rank) => {
+  if (rank === 11) return 'J';
+  if (rank === 12) return 'Q';
+  if (rank === 13) return 'K';
+  if (rank === 14) return 'A';
+  return rank;
+};
+
+const Card = ({ card, isSelected, onClick, isSelectable = false }) => {
+  const getSuitIcon = (suit) => {
+    switch (suit) {
+      case 'SPADE': return '♠';
+      case 'HEART': return '♥';
+      case 'DIAMOND': return '♦';
+      case 'CLUB': return '♣';
+      default: return '';
+    }
+  };
+
+  const isSpecial = card.type !== CardType.STANDARD;
+  const suitIcon = getSuitIcon(card.suit);
+  const rankLabel = isSpecial ? null : formatRank(card.rank);
+
+  let centerContent = null;
+  if (isSpecial) {
+    let imgSrc = null;
+    switch (card.type) {
+      case CardType.SPARROW: imgSrc = sparrowImg; break;
+      case CardType.PHOENIX: imgSrc = phoenixImg; break;
+      case CardType.DRAGON: imgSrc = dragonImg; break;
+      case CardType.DOG: imgSrc = dogImg; break;
+      default: break;
+    }
+    if (imgSrc) {
+      centerContent = <img src={imgSrc} alt={card.type} className="card-image" />;
+    } else {
+      centerContent = <span className="special-label">{card.type}</span>;
+    }
+  } else {
+    centerContent = <span className="card-center-icon">{suitIcon}</span>;
+  }
+
+  return (
+    <div
+      key={`${card.type}-${card.suit}-${card.rank}`}
+      className={`card ${isSelected ? 'selected' : ''} suit-${card.suit} ${isSpecial ? 'special-card' : ''} ${isSelectable ? 'selectable' : ''}`}
+      onClick={onClick}
+    >
+      <div className="card-top">
+        {rankLabel && <span className="card-rank">{rankLabel}</span>}
+        {suitIcon && <span className="card-suit">{suitIcon}</span>}
+        {isSpecial && <span className="special-tiny-label">{card.type}</span>}
+      </div>
+      <div className="card-center">
+        {centerContent}
+      </div>
+      <div className="card-bottom">
+        {rankLabel && <span className="card-rank">{rankLabel}</span>}
+        {suitIcon && <span className="card-suit">{suitIcon}</span>}
+        {isSpecial && <span className="special-tiny-label">{card.type}</span>}
+      </div>
+    </div>
+  );
+};
+
+const ExchangeResultModal = ({ result, players, myIndex, onClose }) => {
+  if (!result) return null;
+
+  const getPartnerIndex = (idx) => (idx + 2) % 4;
+  const getLeftIndex = (idx) => (idx + 3) % 4;
+  const getRightIndex = (idx) => (idx + 1) % 4;
+
+  const exchanges = [
+    { label: 'Left', index: getLeftIndex(myIndex), gave: result.gaveToLeft, received: result.receivedFromLeft },
+    { label: 'Partner', index: getPartnerIndex(myIndex), gave: result.gaveToMid, received: result.receivedFromMid },
+    { label: 'Right', index: getRightIndex(myIndex), gave: result.gaveToRight, received: result.receivedFromRight },
+  ];
+
+  return (
+    <div className="exchange-modal-overlay">
+      <div className="exchange-modal-content">
+        <h2>Exchange Results</h2>
+        <div className="exchange-results-container">
+          <div className="exchange-section">
+            <h3>You Gave</h3>
+            <div className="exchange-grid">
+              {exchanges.map((ex, i) => (
+                <div key={`gave-${i}`} className="exchange-item">
+                  <div className="target-player-name">{players[ex.index]?.name || ex.label}</div>
+                  <div className="card-wrapper">
+                    {ex.gave ? <Card card={ex.gave} /> : <div className="card card-placeholder">?</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="exchange-section">
+            <h3>You Received</h3>
+            <div className="exchange-grid">
+              {exchanges.map((ex, i) => (
+                <div key={`received-${i}`} className="exchange-item">
+                  <div className="target-player-name">{players[ex.index]?.name || ex.label}</div>
+                  <div className="card-wrapper">
+                    {ex.received ? <Card card={ex.received} /> : <div className="card card-placeholder">?</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <button className="btn-modal-close" onClick={onClose}>OK</button>
+      </div>
+    </div>
+  );
+};
+
 const ScoreModal = ({ scoresHistory, players, type, onClose }) => {
   if (!type) return null;
 
@@ -93,7 +209,7 @@ const WishModal = ({ onSelect, onClose }) => {
   );
 };
 
-const TichuPage = ({ roomId, stomp, chatMessages }) => {
+const TichuPage = ({ roomId, stomp, chatMessages, onGameEnd }) => {
   const { user } = useAuth();
 
   const [gameState, setGameState] = useState({
@@ -112,9 +228,14 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
   const [exchangeSelection, setExchangeSelection] = useState({ left: null, mid: null, right: null });
   const [scoreModalType, setScoreModalType] = useState(null); // null, 'ROUND_END', 'END'
   const [isWishModalOpen, setIsWishModalOpen] = useState(false);
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
+  const [exchangeResult, setExchangeResult] = useState(null);
+
   const messageQueue = useRef([]);
   const isPaused = useRef(false);
   const handleTichuMessageRef = useRef(null);
+  const [isRulePopupOpen, setIsRulePopupOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
 
   // Resume processing when delay ends
   const processQueue = useCallback(() => {
@@ -172,7 +293,7 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
             ),
           })),
           scoresHistory: data.scoresHistory,
-          hand: data.myHand,
+          hand: data.myHand.filter(card => !areCardsEqual(card, exchangeSelection.left) && !areCardsEqual(card, exchangeSelection.mid) && !areCardsEqual(card, exchangeSelection.right)),
           roundStatus: data.roundStatus,
           wish: data.wish,
           phaseStatus: data.phaseStatus,
@@ -227,6 +348,8 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
         break;
       case 'EXCHANGE':
         setExchangeSelection({ left: null, mid: null, right: null });
+        setExchangeResult(data);
+        setIsExchangeModalOpen(true);
         setGameState(prev => {
           const cardsToExclude = [data.gaveToLeft, data.gaveToMid, data.gaveToRight].filter(Boolean);
           const newHand = excludeCards(prev.hand, cardsToExclude);
@@ -389,6 +512,24 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     handleTichuMessageRef.current = handleTichuMessage;
   }, [handleTichuMessage]);
 
+  const handleSendChatMessage = () => {
+    if (chatInput.trim() === '') {
+      return;
+    }
+
+    stomp.publish(`/app/rooms/${roomId}/chat`, {
+      message: chatInput
+    });
+
+    setChatInput('');
+  };
+
+  const handleKeyPressOnChatInput = (e) => {
+    if (e.key === 'Enter') {
+      handleSendChatMessage();
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       return;
@@ -448,7 +589,6 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
       wish: wish,
     });
     setSelectedCards([]);
-    setIsWishModalOpen(false);
   };
 
   const handlePlayBomb = () => {
@@ -509,15 +649,8 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
     }
   };
 
-  const formatRank = (rank) => {
-    if (rank === 11) return 'J';
-    if (rank === 12) return 'Q';
-    if (rank === 13) return 'K';
-    if (rank === 14) return 'A';
-    return rank;
-  }
-
   const getTrickLabel = (trick) => {
+    if (trick === null) return null;
     switch (trick.type) {
       case TrickType.SINGLE:
         const card = trick.cards[0];
@@ -562,59 +695,14 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
   };
 
   const renderCard = (card, isSelectable = true) => {
-    const getSuitIcon = (suit) => {
-      switch (suit) {
-        case 'SPADE': return '♠';
-        case 'HEART': return '♥';
-        case 'DIAMOND': return '♦';
-        case 'CLUB': return '♣';
-        default: return '';
-      }
-    };
-
-    const isSpecial = card.type !== CardType.STANDARD;
-    const suitIcon = getSuitIcon(card.suit);
-    const rankLabel = isSpecial ? null : formatRank(card.rank);
-
-    let centerContent = null;
-    if (isSpecial) {
-      let imgSrc = null;
-      switch (card.type) {
-        case CardType.SPARROW: imgSrc = sparrowImg; break;
-        case CardType.PHOENIX: imgSrc = phoenixImg; break;
-        case CardType.DRAGON: imgSrc = dragonImg; break;
-        case CardType.DOG: imgSrc = dogImg; break;
-        default: break;
-      }
-      if (imgSrc) {
-        centerContent = <img src={imgSrc} alt={card.type} className="card-image" />;
-      } else {
-        centerContent = <span className="special-label">{card.type}</span>;
-      }
-    } else {
-      centerContent = <span className="card-center-icon">{suitIcon}</span>;
-    }
-
     return (
-      <div
+      <Card
         key={`${card.type}-${card.suit}-${card.rank}`}
-        className={`card ${includesCard(selectedCards, card) ? 'selected' : ''} suit-${card.suit} ${isSpecial ? 'special-card' : ''}`}
+        card={card}
+        isSelected={includesCard(selectedCards, card)}
+        isSelectable={isSelectable}
         onClick={() => isSelectable && toggleCardSelection(card)}
-      >
-        <div className="card-top">
-          {rankLabel && <span className="card-rank">{rankLabel}</span>}
-          {suitIcon && <span className="card-suit">{suitIcon}</span>}
-          {isSpecial && <span className="special-tiny-label">{card.type}</span>}
-        </div>
-        <div className="card-center">
-          {centerContent}
-        </div>
-        <div className="card-bottom">
-          {rankLabel && <span className="card-rank">{rankLabel}</span>}
-          {suitIcon && <span className="card-suit">{suitIcon}</span>}
-          {isSpecial && <span className="special-tiny-label">{card.type}</span>}
-        </div>
-      </div>
+      />
     );
   };
 
@@ -629,7 +717,8 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
           {p.tichuDeclaration !== null && p.tichuDeclaration !== 'NONE' &&
             <div className="tichu-declaration">{p.tichuDeclaration}</div>}
           {isMyTurn && <div className="status-turn">Turn</div>}
-          {p.passed && <div className="status-pass">PASS</div>}
+          {(p.passed || gameState.roundStatus === 'WAITING_LARGE_TICHU' && p.tichuDeclaration === 'NONE') &&
+            <div className="status-pass">PASS</div>}
         </div>
         {position !== 'bottom' && (
           <div className="hand">
@@ -645,11 +734,55 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
   const redTotal = gameState.scoresHistory.reduce((sum, score) => sum + score[0], 0);
   const blueTotal = gameState.scoresHistory.reduce((sum, score) => sum + score[1], 0);
 
+  const parseWinningScore = (winningScore) => {
+    switch (winningScore) {
+      case "ZERO": return "단판";
+      case "TWO_HUNDRED": return "200";
+      case "FIVE_HUNDRED": return "500";
+      case "ONE_THOUSAND": return "1000";
+      default: return 1000;
+    }
+  };
+
+  const playerMe = gameState.players[myIndex];
+
+  const canDeclareLargeTichu = gameState.roundStatus === 'WAITING_LARGE_TICHU' && playerMe && playerMe.tichuDeclaration === null;
+
+  const decideLargeTichuDeclaration = (isLargeTichuDeclared) => {
+    stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared });
+  }
+
+  const canDeclareSmallTichu = (gameState.roundStatus === 'EXCHANGING' || gameState.hand.length === 14)
+    && playerMe && playerMe.tichuDeclaration !== 'LARGE' && playerMe.tichuDeclaration !== 'SMALL';
+
+  const declareSmallTichu = () => stomp.publish(`/app/rooms/${roomId}/game/tichu/small-tichu`, {});
+
+  const haveToSelectDragonReceiver = gameState.phaseStatus === 'WAITING_DRAGON_SELECTION' && gameState.turn === myIndex;
+
+  const myTrick = identifyTrick(selectedCards, getLastTrick());
+
+  const canPlayCards = gameState.phaseStatus === "PLAYING"
+    && myTrick && canCoverUp(myTrick, getLastTrick()) && (gameState.turn === myIndex || isBomb(myTrick.type) && getLastTrick() !== null);
+
+  const closeExchangeModal = () => {
+    setIsExchangeModalOpen(false);
+    setExchangeResult(null);
+  };
+
   return (
     <div className="tichu-game-container">
       <div className="game-board content">
-        <div className="score-display-top-left">
-          <span className="team-red-label">RED</span> {redTotal} : {blueTotal} <span className="team-blue-label">BLUE</span>
+        <div className="display-top-left">
+          <div className="score-display-top-left">
+            <span className="team-red-label">RED</span> {redTotal} : {blueTotal} <span className="team-blue-label">BLUE</span>
+          </div>
+          <input type="checkbox" className="show-rule-button" checked={isRulePopupOpen} onClick={() => setIsRulePopupOpen(!isRulePopupOpen)}/>
+          {isRulePopupOpen &&
+            <div className="rule-popup">
+              <ul>
+                <li><strong>승리 점수</strong>: {parseWinningScore(gameState.rule.winningScore)}</li>
+              </ul>
+            </div>}
         </div>
         {/* Top Player (Partner) */}
         {renderPlayer(getPlayerAt(2), 'top')}
@@ -667,156 +800,181 @@ const TichuPage = ({ roomId, stomp, chatMessages }) => {
               Wish: {formatRank(gameState.wish)}
             </div>
           )}
-          {
-            getLastTrick() ? (
-              <>
-                <div className="played-by">Played by: {gameState.players[getLastTrick().playerIndex]?.name}</div>
-                <div className="played-cards">
-                  {sortCards(getLastTrick().cards || []).map(c => renderCard(c, false))}
-                </div>
-                <div className="played-trick-label">{getTrickLabel(getLastTrick())}</div>
-              </>
-            ) : (
-              <div className="trick-placeholder">Trick Area</div>
-            )}
-        </div>
-
-        {/* Bottom Player (Me) */}
-        <div className="player-section player-bottom">
-          <div className="player-info">
-            <div className={`player-name team-${gameState.players[myIndex]?.team}`}>{user.name}</div>
-            <div className="card-count">{gameState.hand.length} Cards</div>
-            {gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null && gameState.players[myIndex].tichuDeclaration !== 'NONE' &&
-              <div className="tichu-declaration">{gameState.players[myIndex].tichuDeclaration}</div>}
-            {gameState.turn === myIndex && <div className="status-turn">Turn</div>}
-            {gameState.players[myIndex] && gameState.players[myIndex].passed && <div className="status-pass">PASS</div>}
-          </div>
-          <div className="hand">
-            {sortCards(gameState.hand).map(card => renderCard(card))}
-          </div>
+          {getLastTrick() &&
+            <>
+              <div className="played-by">Played by: {gameState.players[getLastTrick().playerIndex]?.name}</div>
+              <div className="played-cards">
+                {sortCards(getLastTrick().cards || []).map(c => renderCard(c, false))}
+              </div>
+              <div className="played-trick-label">{getTrickLabel(getLastTrick())}</div>
+            </>}
           {gameState.roundStatus === 'EXCHANGING' && (
             <div className="exchange-summary">
               <div className="exchange-slot">
                 <div className="slot-label">To Left</div>
                 {exchangeSelection.left ? renderCard(exchangeSelection.left, false) :
-                  <div className="card-placeholder">?</div>}
+                  <div className="card card-placeholder">?</div>}
               </div>
               <div className="exchange-slot">
                 <div className="slot-label">To Partner</div>
                 {exchangeSelection.mid ? renderCard(exchangeSelection.mid, false) :
-                  <div className="card-placeholder">?</div>}
+                  <div className="card card-placeholder">?</div>}
               </div>
               <div className="exchange-slot">
                 <div className="slot-label">To Right</div>
                 {exchangeSelection.right ? renderCard(exchangeSelection.right, false) :
-                  <div className="card-placeholder">?</div>}
+                  <div className="card card-placeholder">?</div>}
               </div>
             </div>
           )}
         </div>
+
+        {/* Chat Area */}
+        <div className="tichu-chat-section">
+          <div className="tichu-chat-messages">
+            {chatMessages.length === 0 ? (
+              <div className="tichu-chat-placeholder">메시지가 없습니다.</div>
+            ) : (
+              chatMessages.map((msg, index) => (
+                <div key={index} className="tichu-chat-message">
+                  <strong>{gameState.players.find(m => m.id === msg.userId)?.name || 'Unknown'}:</strong> {msg.message}
+                </div>
+              ))
+            )}
+          </div>
+          <div className="tichu-chat-input-area">
+            <input
+              type="text"
+              name="message"
+              placeholder="메시지를 입력하세요..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={handleKeyPressOnChatInput}
+            />
+            <button onClick={handleSendChatMessage}>전송</button>
+          </div>
+        </div>
+
+        {/* Bottom Player (Me) */}
+        <div className="player-section player-bottom">
+          <div className="player-info">
+            <div className={`player-name team-${playerMe?.team}`}>{user.name}</div>
+            <div className="card-count">{gameState.hand.length} Cards</div>
+            {playerMe && playerMe.tichuDeclaration !== null && playerMe.tichuDeclaration !== 'NONE' &&
+              <div className="tichu-declaration">{playerMe.tichuDeclaration}</div>}
+            {gameState.turn === myIndex && <div className="status-turn">Turn</div>}
+            {playerMe && (playerMe.passed || gameState.roundStatus === 'WAITING_LARGE_TICHU' && playerMe.tichuDeclaration === 'NONE') &&
+              <div className="status-pass">PASS</div>}
+          </div>
+          <div className="controls">
+            {canDeclareLargeTichu &&
+              <>
+                <button className="large-tichu-button" onClick={() => decideLargeTichuDeclaration(true)}>
+                  Large Tichu
+                </button>
+                <button className="pass-button" onClick={() => decideLargeTichuDeclaration(false)}>
+                  Pass
+                </button>
+              </>}
+            {canDeclareSmallTichu &&
+              <button className="small-tichu-button" onClick={declareSmallTichu}>
+                Small Tichu
+              </button>}
+            {gameState.roundStatus === 'EXCHANGING' && (
+              <>
+                <button
+                  className="exchange-button"
+                  onClick={() => handleExchange('left')}
+                  disabled={selectedCards.length !== 1 || !!exchangeSelection.left}
+                >
+                  To Left ({getPlayerAt(3)?.name})
+                </button>
+                <button
+                  className="exchange-button"
+                  onClick={() => handleExchange('mid')}
+                  disabled={selectedCards.length !== 1 || !!exchangeSelection.mid}
+                >
+                  To Partner ({getPlayerAt(2)?.name})
+                </button>
+                <button
+                  className="exchange-button"
+                  onClick={() => handleExchange('right')}
+                  disabled={selectedCards.length !== 1 || !!exchangeSelection.right}
+                >
+                  To Right ({getPlayerAt(1)?.name})
+                </button>
+              </>
+            )}
+            {gameState.roundStatus === 'PLAYING' && !haveToSelectDragonReceiver &&
+              <>
+                {(myTrick || (selectedCards.length === 1 && selectedCards[0].type === CardType.PHOENIX)) && !isBomb(myTrick?.type) &&
+                  <button
+                    className="play-trick-button"
+                    onClick={handlePlayTrick}
+                    disabled={!canPlayCards}
+                  >
+                    {getTrickLabel(myTrick) || (selectedCards.length === 1 && selectedCards[0].type === CardType.PHOENIX && 'Phoenix') || 'Invalid'}
+                  </button>
+                }
+                {myTrick && isBomb(myTrick.type) &&
+                  <button
+                    className="play-bomb-button"
+                    onClick={handlePlayBomb}
+                    disabled={!canPlayCards}
+                  >
+                    {getTrickLabel(myTrick) || 'Invalid'}
+                  </button>
+                }
+                <button className="pass-button" onClick={handlePass} disabled={gameState.turn !== myIndex || getLastTrick() === null}>
+                  Pass
+                </button>
+              </>
+            }
+            {haveToSelectDragonReceiver && (
+              <>
+                <button onClick={() => handleSelectDragonReceiver(false)}>
+                  To Left ({getPlayerAt(3)?.name})
+                </button>
+                <button onClick={() => handleSelectDragonReceiver(true)}>
+                  To Right ({getPlayerAt(1)?.name})
+                </button>
+              </>
+            )}
+          </div>
+          <div className="hand">
+            {sortCards(gameState.hand).map(card => renderCard(card))}
+          </div>
+        </div>
       </div>
 
-      <div className="controls">
-        {selectedCards.length > 0 && (
-          <div className="selected-trick-feedback">
-            {identifyTrick(selectedCards, getLastTrick())?.label || 'Invalid Trick'}
-          </div>
-        )}
-        <button
-          className="btn-game btn-trick"
-          onClick={handlePlayTrick}
-          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || gameState.turn !== myIndex || isBomb(identifyTrick(selectedCards, getLastTrick())?.type) || !canCoverUp(identifyTrick(selectedCards, getLastTrick()), getLastTrick())}
-        >
-          Play Trick
-        </button>
-        <button
-          className="btn-game btn-trick"
-          onClick={handlePlayBomb}
-          disabled={gameState.phaseStatus !== "PLAYING" || selectedCards.length === 0 || (gameState.turn !== myIndex && getLastTrick() === null) || !isBomb(identifyTrick(selectedCards, getLastTrick())?.type) || !canCoverUp(identifyTrick(selectedCards, getLastTrick()), getLastTrick())}
-        >
-          Play Bomb
-        </button>
-        <button
-          className="btn-game btn-pass"
-          onClick={handlePass}
-          disabled={gameState.phaseStatus !== "PLAYING" || gameState.turn !== myIndex || getLastTrick() === null}
-        >
-          Pass
-        </button>
-        <button
-          className="btn-game btn-large-tichu"
-          onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared: true })}
-          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || (gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null)}
-        >
-          Large Tichu
-        </button>
-        <button
-          className="btn-game btn-pass-large-tichu"
-          onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/large-tichu`, { isLargeTichuDeclared: false })}
-          disabled={gameState.roundStatus !== 'WAITING_LARGE_TICHU' || (gameState.players[myIndex] && gameState.players[myIndex].tichuDeclaration !== null)}
-        >
-          Large Tichu Pass
-        </button>
-        <button
-          className="btn-game btn-small-tichu"
-          onClick={() => stomp.publish(`/app/rooms/${roomId}/game/tichu/small-tichu`, {})}
-          disabled={gameState.hand.length !== 14 || (gameState.players[myIndex] && (gameState.players[myIndex].tichuDeclaration === 'LARGE' || gameState.players[myIndex].tichuDeclaration === 'SMALL'))}
-        >
-          Small Tichu
-        </button>
-        {gameState.roundStatus === 'EXCHANGING' && (
-          <div className="exchange-controls">
-            <button
-              className="btn-game btn-exchange"
-              onClick={() => handleExchange('left')}
-              disabled={selectedCards.length !== 1 || !!exchangeSelection.left}
-            >
-              To Left
-            </button>
-            <button
-              className="btn-game btn-exchange"
-              onClick={() => handleExchange('mid')}
-              disabled={selectedCards.length !== 1 || !!exchangeSelection.mid}
-            >
-              To Partner
-            </button>
-            <button
-              className="btn-game btn-exchange"
-              onClick={() => handleExchange('right')}
-              disabled={selectedCards.length !== 1 || !!exchangeSelection.right}
-            >
-              To Right
-            </button>
-          </div>
-        )}
-        {gameState.phaseStatus === 'WAITING_DRAGON_SELECTION' && gameState.turn === myIndex && (
-          <div className="dragon-controls">
-            <button
-              className="btn-game btn-dragon-give"
-              onClick={() => handleSelectDragonReceiver(false)}
-            >
-              Give Dragon to Left ({getPlayerAt(3)?.name})
-            </button>
-            <button
-              className="btn-game btn-dragon-give"
-              onClick={() => handleSelectDragonReceiver(true)}
-            >
-              Give Dragon to Right ({getPlayerAt(1)?.name})
-            </button>
-          </div>
-        )}
-      </div>
       {scoreModalType && (
         <ScoreModal
           scoresHistory={gameState.scoresHistory}
           players={gameState.players}
           type={scoreModalType}
-          onClose={() => setScoreModalType(null)}
+          onClose={() => {
+            if (scoreModalType === 'ROUND_END') {
+              setScoreModalType(null);
+            } else {
+              onGameEnd();
+            }
+          }}
+        />
+      )}
+      {isExchangeModalOpen && (
+        <ExchangeResultModal
+          result={exchangeResult}
+          players={gameState.players}
+          myIndex={myIndex}
+          onClose={closeExchangeModal}
         />
       )}
       {isWishModalOpen && (
         <WishModal
-          onSelect={executePlayTrick}
+          onSelect={(wish) => {
+            setIsWishModalOpen(false);
+            executePlayTrick(wish);
+          }}
           onClose={() => setIsWishModalOpen(false)}
         />
       )}

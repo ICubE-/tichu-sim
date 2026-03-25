@@ -52,7 +52,7 @@ export const identifyTrick = (cards, lastTrick) => {
         label = 'Phoenix';
       }
     }
-    return { type: TrickType.SINGLE, rank, label };
+    return { type: TrickType.SINGLE, rank, cards, label };
   }
 
   // PAIR
@@ -60,12 +60,12 @@ export const identifyTrick = (cards, lastTrick) => {
     if (hasPhoenix) {
       if (standardCards.length === 1) {
         const rank = standardCards[0].rank;
-        return { type: TrickType.PAIR, rank, label: `Pair of ${rank}s (with Phoenix)` };
+        return { type: TrickType.PAIR, rank, cards, label: `Pair of ${rank}s (with Phoenix)` };
       }
     } else {
       if (standardCards.length === 2 && standardCards[0].rank === standardCards[1].rank) {
         const rank = standardCards[0].rank;
-        return { type: TrickType.PAIR, rank, label: `Pair of ${rank}s` };
+        return { type: TrickType.PAIR, rank, cards, label: `Pair of ${rank}s` };
       }
     }
   }
@@ -75,12 +75,12 @@ export const identifyTrick = (cards, lastTrick) => {
     if (hasPhoenix) {
       if (standardCards.length === 2 && standardCards[0].rank === standardCards[1].rank) {
         const rank = standardCards[0].rank;
-        return { type: TrickType.THREE_OF_A_KIND, rank, label: `Three of a Kind ${rank}s (with Phoenix)` };
+        return { type: TrickType.THREE_OF_A_KIND, rank, cards, label: `Three of a Kind ${rank}s (with Phoenix)` };
       }
     } else {
       if (standardCards.length === 3 && standardCards[0].rank === standardCards[1].rank && standardCards[1].rank === standardCards[2].rank) {
         const rank = standardCards[0].rank;
-        return { type: TrickType.THREE_OF_A_KIND, rank, label: `Three of a Kind ${rank}s` };
+        return { type: TrickType.THREE_OF_A_KIND, rank, cards, label: `Three of a Kind ${rank}s` };
       }
     }
   }
@@ -92,7 +92,7 @@ export const identifyTrick = (cards, lastTrick) => {
       standardCards[1].rank === standardCards[2].rank &&
       standardCards[2].rank === standardCards[3].rank) {
       const rank = standardCards[0].rank;
-      return { type: TrickType.FOUR_OF_A_KIND, rank, label: `Bomb! Four of a Kind ${rank}s`, isBomb: true };
+      return { type: TrickType.FOUR_OF_A_KIND, rank, cards, label: `Bomb! Four of a Kind ${rank}s`, isBomb: true };
     }
   }
 
@@ -105,12 +105,14 @@ export const identifyTrick = (cards, lastTrick) => {
           return {
             type: TrickType.FULL_HOUSE,
             rank: standardCards[0].rank,
+            cards,
             label: `Full House ${standardCards[0].rank} over ${standardCards[4].rank}`
           };
         } else if (standardCards[2].rank === standardCards[3].rank) {
           return {
             type: TrickType.FULL_HOUSE,
             rank: standardCards[4].rank,
+            cards,
             label: `Full House ${standardCards[4].rank} over ${standardCards[0].rank}`
           };
         }
@@ -125,12 +127,14 @@ export const identifyTrick = (cards, lastTrick) => {
             return {
               type: TrickType.FULL_HOUSE,
               rank: standardCards[0].rank,
+              cards,
               label: `Full House ${standardCards[0].rank}s (with Phoenix)`
             };
           } else if (standardCards[1].rank === standardCards[3].rank) {
             return {
               type: TrickType.FULL_HOUSE,
               rank: standardCards[3].rank,
+              cards,
               label: `Full House ${standardCards[3].rank}s (with Phoenix)`
             };
           } else if (standardCards[0].rank === standardCards[1].rank && standardCards[2].rank === standardCards[3].rank) {
@@ -138,6 +142,7 @@ export const identifyTrick = (cards, lastTrick) => {
             return {
               type: TrickType.FULL_HOUSE,
               rank: standardCards[3].rank,
+              cards,
               label: `Full House ${standardCards[3].rank}s over ${standardCards[0].rank} (with Phoenix)`
             };
           }
@@ -163,6 +168,7 @@ export const identifyTrick = (cards, lastTrick) => {
           minRank: startRank,
           maxRank: startRank + size / 2 - 1,
           length: size / 2,
+          cards,
           label: `Consecutive Pairs ${startRank}-${startRank + size / 2 - 1}`
         };
       }
@@ -201,6 +207,7 @@ export const identifyTrick = (cards, lastTrick) => {
           minRank: standardCards[0].rank,
           maxRank: standardCards[standardCards.length - 1].rank,
           length: size / 2,
+          cards,
           label: `Consecutive Pairs ${standardCards[0].rank}-${standardCards[standardCards.length - 1].rank} (with Phoenix)`
         };
       }
@@ -228,6 +235,7 @@ export const identifyTrick = (cards, lastTrick) => {
               minRank: startRank,
               maxRank: startRank + size - 1,
               length: size,
+              cards,
               label: `Bomb! Straight Flush ${startRank}-${startRank + size - 1}`,
               isBomb: true
             };
@@ -236,6 +244,7 @@ export const identifyTrick = (cards, lastTrick) => {
               minRank: startRank,
               maxRank: startRank + size - 1,
               length: size,
+              cards,
               label: `Straight ${startRank}-${startRank + size - 1}`
             };
           }
@@ -256,6 +265,7 @@ export const identifyTrick = (cards, lastTrick) => {
           minRank: 1,
           maxRank: size,
           length: size,
+          cards,
           label: `Straight 1-${size}`
         };
       }
@@ -293,6 +303,7 @@ export const identifyTrick = (cards, lastTrick) => {
               minRank: min,
               maxRank: max,
               length: size,
+              cards,
               label: `Straight ${min}-${max} (with Phoenix)`
             };
           }
@@ -321,6 +332,7 @@ export const identifyTrick = (cards, lastTrick) => {
             minRank: 1,
             maxRank: max,
             length: size,
+            cards,
             label: `Straight 1-${max} (with Phoenix)`
           };
         }
@@ -477,6 +489,7 @@ export const appendTrickInfo = (trick, prevTrick) => {
 export const canCoverUp = (myTrick, lastTrick) => {
   if (!myTrick) return false;
   if (!lastTrick) return true;
+  if (lastTrick.type === TrickType.DOG) return false;
 
   switch (myTrick.type) {
     case TrickType.SINGLE:

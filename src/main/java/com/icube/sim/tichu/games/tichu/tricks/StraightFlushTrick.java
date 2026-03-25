@@ -72,7 +72,9 @@ public class StraightFlushTrick extends Trick {
 
     @Override
     public boolean canCoverUp(Trick other) {
-        if (other instanceof StraightFlushTrick other1) {
+        if (other instanceof DogTrick) {
+            return false;
+        } else if (other instanceof StraightFlushTrick other1) {
             return canCoverUp(other1);
         } else {
             return true;

@@ -142,7 +142,17 @@ const RoomDetailPage = () => {
   }
 
   if (room.hasGameStarted) {
-    return <TichuPage roomId={room.id} stomp={stomp} />
+    return <TichuPage
+      roomId={room.id}
+      stomp={stomp}
+      chatMessages={chatMessages}
+      onGameEnd={() => {
+        setRoom(prev => ({
+          ...prev,
+          hasGameStarted: false,
+        }))
+      }}
+    />
   }
 
   return (
