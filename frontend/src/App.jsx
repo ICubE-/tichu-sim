@@ -2,6 +2,7 @@ import React from 'react';
 import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
 import {AuthProvider, useAuth} from './useAuth.jsx';
 import LoginPage from './LoginPage';
+import SignupPage from './SignupPage';
 import NavBar from "./NavBar";
 import HomePage from './HomePage';
 import RoomDetailPage from './RoomDetailPage';
@@ -18,6 +19,7 @@ const AppContent = () => {
       <div className="container">
         <Routes>
           <Route path="/" element={<LoginPage/>}/>
+          <Route path="/signup" element={<SignupPage/>}/>
           <Route path="*" element={<Navigate to="/" replace/>}/>
         </Routes>
       </div>
