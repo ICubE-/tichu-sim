@@ -3,8 +3,7 @@ runtime: corretto11
 build:
   commands:
     build:
-      - chmod +x mvnw
-      - ./mvnw clean package -DskipTests
+      - mvn clean package -DskipTests
 run:
   command: java -jar target/tichu-sim-1.0.0.jar
   network:
